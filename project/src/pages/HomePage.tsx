@@ -30,12 +30,15 @@ const HomePage: React.FC = () => {
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-2xl">
-              <BookOpen className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Vocab Quest
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-6">
+            <img
+              src="/savi-explorer.png"
+              alt="Logo"
+              className="w-56 h-56 sm:w-[28rem] sm:h-[28rem] max-w-full object-contain"
+              style={{ minWidth: 180 }}
+            />
+            <h1 className="text-5xl sm:text-7xl font-extrabold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Savi Vocab
             </h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
@@ -102,7 +105,7 @@ const HomePage: React.FC = () => {
             <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-8 h-8 text-white" />
+                  <img src="/savi-explorer.png" alt="Logo" className="w-12 h-12 object-contain rounded-full" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800">Study Mode</h2>
               </div>

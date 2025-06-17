@@ -176,7 +176,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
           </button>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
+              <img src="/savi-explorer.png" alt="Logo" className="w-10 h-10 object-contain rounded-full" />
             </div>
             <h1 className="text-4xl font-bold text-green-600">Study Mode</h1>
           </div>
