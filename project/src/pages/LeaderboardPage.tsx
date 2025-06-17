@@ -8,24 +8,9 @@ const LeaderboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { players, clearLeaderboard } = useGame();
   const [filterMode, setFilterMode] = useState<GameMode | 'all'>('all');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [filterDifficulty, setFilterDifficulty] = useState('all');
-
-  const allCategories = [
-    { value: 'animals', label: 'Animals' },
-    { value: 'colors', label: 'Colors' },
-    { value: 'alphabet', label: 'Alphabet' },
-  ];
-  const allDifficulties = [
-    { value: 'starter', label: 'Starter' },
-    { value: 'mover', label: 'Mover' },
-    { value: 'flyer', label: 'Flyer' },
-  ];
 
   const filteredPlayers = players.filter(player => 
-    (filterMode === 'all' || player.mode === filterMode) &&
-    (filterCategory === 'all' || player.category === filterCategory) &&
-    (filterDifficulty === 'all' || player.difficulty === filterDifficulty)
+    filterMode === 'all' || player.mode === filterMode
   );
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => b.score - a.score);
@@ -134,33 +119,13 @@ const LeaderboardPage: React.FC = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-colors ${
                 filterMode === 'timed'
                   ? 'bg-orange-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-orange-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               <Clock className="w-4 h-4" />
               Timed
             </button>
           </div>
-          <select
-            value={filterCategory}
-            onChange={e => setFilterCategory(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 focus:outline-none"
-          >
-            <option value="all">All Categories</option>
-            {allCategories.map(cat => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
-          <select
-            value={filterDifficulty}
-            onChange={e => setFilterDifficulty(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 focus:outline-none"
-          >
-            <option value="all">All Difficulties</option>
-            {allDifficulties.map(diff => (
-              <option key={diff.value} value={diff.value}>{diff.label}</option>
-            ))}
-          </select>
         </div>
 
         {/* Leaderboard */}
@@ -204,9 +169,6 @@ const LeaderboardPage: React.FC = () => {
                         {player.mode === 'timed' ? <Clock className="w-3 h-3" /> : <Target className="w-3 h-3" />}
                         {player.mode}
                       </div>
-                      {player.category && <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">{player.category}</span>}
-                      {player.difficulty && <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">{player.difficulty}</span>}
-                      {player.speed && <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">{player.speed}</span>}
                     </div>
                     <p className="text-sm text-gray-500">
                       {new Date(player.timestamp).toLocaleDateString('en-US', {

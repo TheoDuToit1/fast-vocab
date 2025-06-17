@@ -71,10 +71,10 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const [numberQuizSetIndex, setNumberQuizSetIndex] = useState(0);
   useEffect(() => {
     if (categoryId === 'numbers') {
-      let digitCount = 1;
-      if (gameState.difficulty === 'flyer') digitCount = 3;
-      else if (gameState.difficulty === 'mover') digitCount = 2;
-      // Generate enough sets of 3 numbers (e.g., 10 sets for 30 questions)
+      let digitCount = 2; // starter = 2 digits
+      if (gameState.difficulty === 'flyer') digitCount = 4;
+      else if (gameState.difficulty === 'mover') digitCount = 3;
+      // starter: 2 digits, mover: 3 digits, flyer: 4 digits
       const totalSets = 10;
       const allNumbers = [];
       for (let i = 0; i < totalSets; i++) {
@@ -86,6 +86,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId, gameState.difficulty, gameState.mode]);
+
+  // --- Animal shuffle state for Challenge Mode ---
+  const [shuffledAnimalPaths, setShuffledAnimalPaths] = useState<string[]>([]);
 
   let quizItems: any[] = [];
   if (categoryId === 'alphabet') {
@@ -129,6 +132,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         if (/^stingray/i.test(base)) displayName = 'Stingray';
         else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
+        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
         return {
           id: base,
           name: displayName,
@@ -142,6 +146,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         if (/^stingray/i.test(base)) displayName = 'Stingray';
         else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
+        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
         return {
           id: base,
           name: displayName,
@@ -155,6 +160,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         if (/^stingray/i.test(base)) displayName = 'Stingray';
         else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
+        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
         return {
           id: base,
           name: displayName,
@@ -170,21 +176,14 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         quizItems = starter;
       }
     } else {
-      // Challenge Mode: randomized
-      let animalPaths: string[] = [];
-      if (gameState.difficulty === 'flyer') {
-        animalPaths = flyerSet;
-      } else if (gameState.difficulty === 'mover') {
-        animalPaths = moverSet;
-      } else {
-        animalPaths = starterAnimals;
-      }
-      quizItems = shuffleArray(animalPaths).map(imgPath => {
+      // Challenge Mode: use shuffledAnimalPaths from state
+      quizItems = shuffledAnimalPaths.map(imgPath => {
         const fileName = imgPath.split('/').pop() || '';
         const base = fileName.replace(/\.[^/.]+$/, '');
         let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         if (/^stingray/i.test(base)) displayName = 'Stingray';
         else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
+        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
         return {
           id: base,
           name: displayName,
@@ -512,6 +511,20 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   }, []);
 
   const timerBarRef = useRef<TimerBarHandle>(null);
+
+  useEffect(() => {
+    if (categoryId === 'animals' && gameState.mode === 'timed') {
+      let animalPaths: string[] = [];
+      if (gameState.difficulty === 'flyer') {
+        animalPaths = flyerSet;
+      } else if (gameState.difficulty === 'mover') {
+        animalPaths = moverSet;
+      } else {
+        animalPaths = starterAnimals;
+      }
+      setShuffledAnimalPaths(shuffleArray(animalPaths));
+    }
+  }, [categoryId, gameState.difficulty, gameState.mode]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
