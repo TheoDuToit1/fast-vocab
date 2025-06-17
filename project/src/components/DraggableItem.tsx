@@ -87,16 +87,16 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
               onClick={() => speakWord(item.name)}
             />
           ) : (
-            <img
-              src={item.image}
-              alt={item.name}
-              className={`
+        <img
+          src={item.image}
+          alt={item.name}
+          className={`
                 w-24 h-24 object-cover rounded-2xl
-                transition-all duration-200
-                ${isDragging ? 'ring-4 ring-blue-400 ring-opacity-50' : ''}
-                ${isIncorrect ? 'ring-4 ring-red-400 ring-opacity-50' : ''}
-              `}
-              draggable={false}
+            transition-all duration-200
+            ${isDragging ? 'ring-4 ring-blue-400 ring-opacity-50' : ''}
+            ${isIncorrect ? 'ring-4 ring-red-400 ring-opacity-50' : ''}
+          `}
+          draggable={false}
               onClick={() => speakWord(item.name)}
               style={{ cursor: 'pointer' }}
             />

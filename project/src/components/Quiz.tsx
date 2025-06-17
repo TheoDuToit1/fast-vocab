@@ -660,7 +660,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
           </div>
 
           {/* Animals Row */}
-            <div className="flex flex-wrap justify-center gap-8 mt-6">
+            <div className="flex flex-wrap justify-center gap-20 mt-6">
               {currentItems.map((item) => (
                 categoryId === 'numbers' ? (
                   <DraggableItem
@@ -695,19 +695,19 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             </div>
 
           {/* Drop Zones Row */}
-            <div className="flex justify-center items-center gap-16 mt-16">
+            <div className="flex justify-center items-center gap-24 mt-20">
               {dropZones.map((zone) => (
-              <DropZone
-                key={zone.id}
-                zone={zone}
-                isHovered={hoveredZone === zone.id}
-                matchedItem={getMatchedItem(zone.id)}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              />
-            ))}
-          </div>
+                <DropZone
+                  key={zone.id}
+                  zone={zone}
+                  isHovered={hoveredZone === zone.id}
+                  matchedItem={getMatchedItem(zone.id)}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                />
+              ))}
+            </div>
         </div>
       </div>
       )}

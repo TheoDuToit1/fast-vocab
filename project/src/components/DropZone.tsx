@@ -60,11 +60,11 @@ const DropZone: React.FC<DropZoneProps> = ({
                 style={{ background: matchedItem.hex }}
               />
             ) : (
-              <img
-                src={matchedItem.image}
-                alt={matchedItem.name}
-                className="w-12 h-12 rounded-full object-cover border-2 border-green-500"
-              />
+            <img
+              src={matchedItem.image}
+              alt={matchedItem.name}
+              className="w-12 h-12 rounded-full object-cover border-2 border-green-500"
+            />
             )}
             <span className="text-sm font-bold">✓ {zone.label}</span>
           </div>
