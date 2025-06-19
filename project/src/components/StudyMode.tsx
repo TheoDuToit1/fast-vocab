@@ -44,9 +44,9 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
     allItems = alphabetItems;
   } else if (category === 'colors') {
     if (difficulty === 'flyer') {
-      allItems = colorFlyerSet;
+      allItems = flyerColors;
     } else if (difficulty === 'mover') {
-      allItems = colorMoverSet;
+      allItems = moverColors;
     } else {
       allItems = starterColors;
     }
@@ -213,7 +213,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 ${animDirection === 'left' ? 'opacity-0 -translate-x-12 scale-95' : ''}
                 ${!animDirection ? 'opacity-100 translate-x-0 scale-100' : ''}
               `}>
-                <div className="w-64 h-64 rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white">
+                <div className="w-64 h-64 rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white relative">
                   {category === 'colors' ? (
                     <div
                       className="w-48 h-48 rounded-full border-4 border-gray-200 mx-auto"
@@ -236,7 +236,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                       className="w-full h-full object-cover"
                     />
                   )}
-                  {/* Speaker Button */}
+                  {/* Speaker Button - moved up */}
                   <button
                     type="button"
                     onClick={() => {
@@ -250,11 +250,17 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                         window.speechSynthesis.speak(utterance);
                       }
                     }}
-                    className="absolute bottom-4 right-4 w-12 h-12 bg-white/80 rounded-full flex items-center justify-center shadow-lg hover:bg-green-100 transition-colors"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 w-12 h-12 bg-white/80 rounded-full flex items-center justify-center shadow-lg hover:bg-green-100 transition-colors z-10"
                     aria-label={`Play audio for ${currentItem.name}`}
                   >
                     <Volume2 className="w-6 h-6 text-green-600" />
                   </button>
+                </div>
+                {/* Name under main picture for all study modes - moved down, white background */}
+                <div className="mt-12 flex justify-center">
+                  <div className="bg-white rounded-xl px-8 py-4 shadow-lg text-2xl font-bold text-gray-700 select-none inline-block">
+                    {category === 'numbers' ? currentItem.word : currentItem.name}
+                  </div>
                 </div>
                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                   <Eye className="w-6 h-6 text-white" />

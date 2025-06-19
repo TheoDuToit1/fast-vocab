@@ -6,6 +6,7 @@ interface TimerBarProps {
   isPlaying: boolean;
   isPaused: boolean;
   onTimeUp: () => void;
+  onPercentChange?: (percent: number) => void;
 }
 
 export interface TimerBarHandle {
@@ -13,7 +14,7 @@ export interface TimerBarHandle {
   subtractTime: (percent: number) => void;
 }
 
-const TimerBar = forwardRef<TimerBarHandle, TimerBarProps>(({ speed = 'normal', isPlaying, isPaused, onTimeUp }, ref) => {
+const TimerBar = forwardRef<TimerBarHandle, TimerBarProps>(({ speed = 'normal', isPlaying, isPaused, onTimeUp, onPercentChange }, ref) => {
   const [timeLeft, setTimeLeft] = useState(100); // Percentage
 
   // Get total time based on speed
@@ -68,6 +69,7 @@ const TimerBar = forwardRef<TimerBarHandle, TimerBarProps>(({ speed = 'normal', 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         const newTime = prev - decrementPerInterval;
+        if (typeof onPercentChange === 'function') onPercentChange(newTime);
         if (newTime <= 0) {
           clearInterval(timer);
           onTimeUp();
@@ -78,7 +80,7 @@ const TimerBar = forwardRef<TimerBarHandle, TimerBarProps>(({ speed = 'normal', 
     }, interval);
 
     return () => clearInterval(timer);
-  }, [isPlaying, isPaused, speed, onTimeUp]);
+  }, [isPlaying, isPaused, speed, onTimeUp, onPercentChange]);
 
   useImperativeHandle(ref, () => ({
     addTime: (percent: number) => {

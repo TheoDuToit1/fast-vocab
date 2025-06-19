@@ -112,32 +112,32 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
             />
           )}
           {item.display === undefined && (
-            <button
-              type="button"
-              onClick={e => { e.stopPropagation(); speakWord(item.name); }}
-              style={{
-                position: 'absolute',
-                bottom: 4,
-                right: 4,
-                background: 'rgba(255,255,255,0.8)',
-                border: 'none',
-                borderRadius: '50%',
-                width: 28,
-                height: 28,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
-              }}
-              aria-label={`Play audio for ${item.name}`}
-            >
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 8V12H7L11 16V4L7 8H3Z" fill="#6366f1"/>
-                <path d="M15.54 8.46C16.4776 9.39763 16.4776 10.9024 15.54 11.84" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M17.66 6.34C19.4021 8.08213 19.4021 11.2179 17.66 12.96" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); speakWord(item.name); }}
+            style={{
+              position: 'absolute',
+              bottom: 4,
+              right: 4,
+              background: 'rgba(255,255,255,0.8)',
+              border: 'none',
+              borderRadius: '50%',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+            }}
+            aria-label={`Play audio for ${item.name}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 8V12H7L11 16V4L7 8H3Z" fill="#6366f1"/>
+              <path d="M15.54 8.46C16.4776 9.39763 16.4776 10.9024 15.54 11.84" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M17.66 6.34C19.4021 8.08213 19.4021 11.2179 17.66 12.96" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
           )}
         </div>
       </div>

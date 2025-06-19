@@ -9,7 +9,7 @@ import HelpModal from './modals/HelpModal';
 import TimeUpModal from './modals/TimeUpModal';
 import CountdownTimer from './CountdownTimer';
 import TimerBar, { TimerBarHandle } from './TimerBar';
-import { flyerSet } from '../data/animals';
+import { flyerSet, starterAnimals, moverSet } from '../data/animals';
 import { flyerColors } from '../data/colors';
 import { MatchedPair, FloatingScore, Player } from '../types/game';
 import { alphabetItems } from '../data/alphabet';
@@ -89,21 +89,38 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
           hex: '#6366f1',
         };
       });
-    } else {
-      // Fix: ensure each animal item has a valid image property
+    } else if (categoryId === 'animals') {
+      // Use correct set based on difficulty
+      const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeAnimal = (imgPath: string) => {
         const fileName = imgPath.split('/').pop() || '';
         const base = fileName.replace(/\.[^/.]+$/, '');
         let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (/^stingray/i.test(base)) displayName = 'Stingray';
+        else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
+        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
         return {
           id: base,
           name: displayName,
-          image: imgPath, // <-- ensure this is set
+          image: imgPath,
           category: '',
           hex: undefined,
         };
       };
-      items = flyerSet.map(normalizeAnimal); // Use all for Practice Mode
+      if (difficulty === 'starter') {
+        items = starterAnimals.map(normalizeAnimal);
+      } else if (difficulty === 'mover') {
+        items = moverSet.map(normalizeAnimal);
+      } else if (difficulty === 'flyer') {
+        // Shuffle flyerSet before mapping
+        const shuffledFlyer = shuffleArray(flyerSet);
+        items = shuffledFlyer.map(normalizeAnimal);
+      } else {
+        items = flyerSet.map(normalizeAnimal); // fallback
+      }
+    } else {
+      // fallback
+      items = flyerSet.map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
     }
     // Split into sets of 3
     const sets = [];
@@ -116,9 +133,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
     // Shuffle each set ONCE
     setShuffledSets(sets.map(set => shuffleArray(set)));
-  }, [categoryId, gameState.mode, gameState.gameSessionId]);
+  }, [categoryId, gameState.mode, gameState.gameSessionId, (gameState as any).difficulty]);
 
-  const [currentSet] = useState(0);
+  const [currentSet, setCurrentSet] = useState(0);
   const currentItems = shuffledSets[currentSet] || [];
   const isSetComplete = matchedPairs.length === currentItems.length && matchedPairs.length > 0;
 
@@ -127,6 +144,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // Audio enabled state
   const [audioEnabled, setAudioEnabled] = useState(true);
+
+  // Add audio refs for correct/wrong/ticking sounds
+  const correctAudioRef = useRef<HTMLAudioElement | null>(null);
+  const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
+  const tickingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Generate drop zones from the same shuffled currentItems array
   // (delete the entire dropZones declaration)
@@ -185,13 +207,16 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // --- State for set-based bonus ---
   const [perfectSetsInARow, setPerfectSetsInARow] = useState(0);
-  const [activeContinuousBonus, setActiveContinuousBonus] = useState(false);
+  const [comboMultiplier, setComboMultiplier] = useState(1.0); // starts at 1.0, goes up to 2.5
+  const [comboActive, setComboActive] = useState(false);
   const [currentSetMistake, setCurrentSetMistake] = useState(false);
-  const [continuousBonusValue, setContinuousBonusValue] = useState(0); // +5, +10, ...
+  // Track total combos, correct, and wrong answers
+  const [totalCombos, setTotalCombos] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [totalWrong, setTotalWrong] = useState(0);
 
   // --- Scoring logic ---
   const BASE_POINTS = 10; // Practice Mode only
-  const MAX_BONUS = 50;
 
   // --- Drop logic ---
   const handleDrop = useCallback((zoneId: string, event: React.DragEvent) => {
@@ -205,9 +230,14 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       // Challenge Mode: only count matches, no scoring
       if (isCorrect) {
         setMatchedPairs(prev => [...prev, { itemId: draggedItem, zoneId }]);
+        setTotalCorrect(prev => prev + 1);
+        playCorrectSound();
+        if (item) setTimeout(() => speakWord(item.name), 600);
       } else {
         setIncorrectDrop(draggedItem);
         setTimeout(() => setIncorrectDrop(null), 1000);
+        setTotalWrong(prev => prev + 1);
+        playWrongSound();
       }
       setDraggedItem(null);
       setHoveredZone(null);
@@ -216,59 +246,83 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
     // Practice Mode scoring
     let points = BASE_POINTS;
+    let speedBonusTriggered = false;
+    let speedBonusPoints = 0;
     if (isCorrect) {
+      setTotalCorrect(prev => prev + 1);
       // Speed bonus logic
       const updatedTimestamps = [...recentCorrectTimestamps, now].filter(ts => now - ts <= 2000);
       setRecentCorrectTimestamps(updatedTimestamps);
+      // Combo multiplier logic
+      if (comboActive) {
+        points = Math.round(points * comboMultiplier);
+      }
       if (updatedTimestamps.length >= 3) {
-        points += 25;
         setShowSpeedBonus(true);
         setTimeout(() => setShowSpeedBonus(false), 1200);
         setRecentCorrectTimestamps([]);
+        // Multiply combo-multiplied points for this answer by 1.6 for speed bonus
+        speedBonusPoints = Math.round(points * 1.6);
+        updateGameState({ score: gameState.score + speedBonusPoints });
+        speedBonusTriggered = true;
+        // Floating score for speed bonus
+        const rect = event.currentTarget.getBoundingClientRect();
+        addFloatingScore(speedBonusPoints, rect.left + rect.width / 2, rect.top - 40);
+      } else {
+        updateGameState({ score: gameState.score + points });
+        // Floating score for normal/correct answer
+        const rect = event.currentTarget.getBoundingClientRect();
+        addFloatingScore(points, rect.left + rect.width / 2, rect.top);
       }
-      // Continuous bonus logic
-      if (activeContinuousBonus) {
-        points += continuousBonusValue;
-      }
-      updateGameState({
-        score: gameState.score + points
-      });
       setMatchedPairs(prev => [...prev, { itemId: draggedItem, zoneId }]);
       setCurrentSetMistake(false);
-      // Floating score
-      const rect = event.currentTarget.getBoundingClientRect();
-      addFloatingScore(points, rect.left + rect.width / 2, rect.top);
-      if (item) speakWord(item.name);
+      playCorrectSound();
+      if (item) setTimeout(() => speakWord(item.name), 600);
       if (timerBarRef.current) timerBarRef.current.addTime(5);
     } else {
       setCurrentSetMistake(true);
+      // Reset speed bonus
       setRecentCorrectTimestamps([]);
       setShowSpeedBonus(false);
+      // Reset combo
+      setComboActive(false);
+      setComboMultiplier(1.0);
+      setPerfectSetsInARow(0);
       setIncorrectDrop(draggedItem);
       setTimeout(() => setIncorrectDrop(null), 1000);
+      setTotalWrong(prev => prev + 1);
+      playWrongSound();
       if (timerBarRef.current) timerBarRef.current.subtractTime(7);
     }
     setDraggedItem(null);
     setHoveredZone(null);
-  }, [draggedItem, gameState.isPlaying, gameState.score, currentItems, addFloatingScore, updateGameState, gameState.mode, timerBarRef, recentCorrectTimestamps, activeContinuousBonus, continuousBonusValue]);
+  }, [draggedItem, gameState.isPlaying, gameState.score, currentItems, addFloatingScore, updateGameState, gameState.mode, timerBarRef, recentCorrectTimestamps, comboActive, comboMultiplier]);
 
-  // --- Set completion effect: update perfect set streak and continuous bonus ---
+  // --- Set completion effect: update perfect set streak and combo multiplier ---
   useEffect(() => {
     if (isSetComplete && gameState.mode !== 'timed') {
       if (!currentSetMistake) {
-        setPerfectSetsInARow(prev => prev + 1);
-        if (perfectSetsInARow + 1 >= 3) {
-          setActiveContinuousBonus(true);
-          setContinuousBonusValue(prev => Math.min(prev + 5, MAX_BONUS));
-        }
+        setPerfectSetsInARow(prev => {
+          const newStreak = prev + 1;
+          if (newStreak === 3) {
+            setComboActive(true);
+            setComboMultiplier(1.5);
+            setTotalCombos(prev => prev + 1);
+          } else if (newStreak > 3) {
+            setComboActive(true);
+            setComboMultiplier(prevMultiplier => Math.min(prevMultiplier + 0.5, 2.5));
+            setTotalCombos(prev => prev + 1);
+          }
+          return newStreak;
+        });
       } else {
         setPerfectSetsInARow(0);
-        setActiveContinuousBonus(false);
-        setContinuousBonusValue(0);
+        setComboActive(false);
+        setComboMultiplier(1.0);
       }
       setCurrentSetMistake(false);
     }
-  }, [isSetComplete]);
+  }, [isSetComplete, currentSetMistake, gameState.mode]);
 
   // --- Reset perfect set streak on set change ---
   useEffect(() => {
@@ -296,7 +350,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     const safeCategory = getSafeCategory();
     console.log('Saving player:', {
       name: gameState.playerName || 'Guest',
-      score: gameState.score,
+      score: gameState.mode === 'timed' ? challengeCorrectTotal : gameState.score,
       mode: gameState.mode,
       timestamp: Date.now(),
       category: safeCategory,
@@ -305,7 +359,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     // Always add the most recent game result to the leaderboard
     const newPlayer: Player = {
       name: gameState.playerName || 'Guest',
-      score: gameState.score,
+      score: gameState.mode === 'timed' ? challengeCorrectTotal : gameState.score,
       mode: gameState.mode,
       timestamp: Date.now(),
       category: safeCategory,
@@ -385,6 +439,98 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     return pair ? (currentItems.find(item => item.id === pair.itemId) || null) : null;
   }, [matchedPairs, currentItems]);
 
+  // Advance to next set when current set is complete
+  useEffect(() => {
+    if (isSetComplete && currentSet < shuffledSets.length - 1) {
+      setTimeout(() => {
+        setCurrentSet(currentSet + 1);
+        setMatchedPairs([]);
+        setDraggedItem(null);
+        setHoveredZone(null);
+        setIncorrectDrop(null);
+        setCurrentSetMistake(false);
+      }, 1000); // 1 second delay for feedback
+    }
+  }, [isSetComplete, currentSet, shuffledSets.length]);
+
+  // Add state for challenge mode stats
+  const [challengeCorrectTotal, setChallengeCorrectTotal] = useState(0);
+  const [challengeSetsCompleted, setChallengeSetsCompleted] = useState(0);
+
+  // Track correct answers in challenge mode
+  useEffect(() => {
+    if (gameState.mode === 'timed') {
+      setChallengeCorrectTotal(0);
+      setChallengeSetsCompleted(0);
+    }
+  }, [gameState.mode, gameState.gameSessionId]);
+
+  useEffect(() => {
+    if (gameState.mode === 'timed' && isSetComplete) {
+      setChallengeSetsCompleted(currentSet + 1);
+      setChallengeCorrectTotal(prev => prev + matchedPairs.length);
+    }
+  }, [isSetComplete, gameState.mode, currentSet, matchedPairs.length]);
+
+  // Play correct sound
+  const playCorrectSound = useCallback(() => {
+    if (audioEnabled && correctAudioRef.current) {
+      correctAudioRef.current.currentTime = 0;
+      correctAudioRef.current.volume = 0.4;
+      correctAudioRef.current.play();
+    }
+  }, [audioEnabled]);
+  // Play wrong sound
+  const playWrongSound = useCallback(() => {
+    if (audioEnabled && wrongAudioRef.current) {
+      wrongAudioRef.current.currentTime = 0;
+      wrongAudioRef.current.volume = 0.4;
+      wrongAudioRef.current.play();
+    }
+  }, [audioEnabled]);
+
+  // Track TimerBar percent for practice mode
+  const [timerBarPercent, setTimerBarPercent] = useState(100);
+
+  // Play ticking sound (loop)
+  useEffect(() => {
+    const shouldTick = (
+      (gameState.mode === 'timed' && timeLeft <= 10) ||
+      (gameState.mode === 'normal' && timerBarPercent <= 10)
+    ) && gameState.isPlaying && !gameState.isPaused && audioEnabled;
+    if (shouldTick) {
+      if (tickingAudioRef.current) {
+        tickingAudioRef.current.volume = 0.7;
+        tickingAudioRef.current.loop = true;
+        tickingAudioRef.current.playbackRate = 1.0;
+        if (tickingAudioRef.current.paused) {
+          tickingAudioRef.current.currentTime = 0;
+          tickingAudioRef.current.play();
+          console.log('Ticking sound started');
+        }
+      }
+    } else {
+      if (tickingAudioRef.current) {
+        if (!tickingAudioRef.current.paused) {
+          tickingAudioRef.current.pause();
+          tickingAudioRef.current.currentTime = 0;
+          console.log('Ticking sound stopped');
+        }
+      }
+    }
+  }, [gameState.mode, gameState.isPlaying, gameState.isPaused, timeLeft, audioEnabled, timerBarPercent]);
+
+  // Stop ticking sound when time is up or Time's Up modal is shown
+  useEffect(() => {
+    if (isTimeUp || showTimeUp) {
+      if (tickingAudioRef.current) {
+        tickingAudioRef.current.pause();
+        tickingAudioRef.current.currentTime = 0;
+        console.log('Ticking sound stopped (time up/modal)');
+      }
+    }
+  }, [isTimeUp, showTimeUp]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
       {/* Floating Scores */}
@@ -419,11 +565,27 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             Player: {gameState.playerName || 'Guest'}
           </div>
           <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold">
-            Set {currentSet + 1}
+            {gameState.mode === 'timed' ? (
+              <>Sets: {challengeSetsCompleted}</>
+            ) : (
+              <>Set {currentSet + 1}</>
+            )}
           </div>
+          {gameState.mode === 'timed' ? (
+            <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
+              Correct: {challengeCorrectTotal}
+            </div>
+          ) : (
           <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
             Score {gameState.score.toLocaleString()}
           </div>
+          )}
+          {/* Combo Indicator */}
+          {comboActive && (
+            <div className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg flex items-center gap-2 animate-pulse border-2 border-white">
+              <span role="img" aria-label="combo">🔥</span> Combo x{comboMultiplier.toFixed(1)}
+            </div>
+          )}
           {gameState.mode === 'timed' && (
             <div className={`px-4 py-2 rounded-full font-semibold flex items-center gap-2 ${
               timeLeft <= 10 ? 'bg-red-100 text-red-800 animate-pulse' : 'bg-yellow-100 text-yellow-800'
@@ -474,20 +636,24 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             isPlaying={gameState.isPlaying}
             isPaused={gameState.isPaused}
             onTimeUp={handleTimeUp}
+            onPercentChange={setTimerBarPercent}
           />
         </div>
       )}
 
       {/* Game Over Modal for Timed Mode */}
-      {isTimeUp && (
+      {isTimeUp && gameState.mode === 'timed' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-3xl p-8 text-center shadow-2xl transform animate-in zoom-in duration-500">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Clock className="w-8 h-8 text-red-600" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-2">Time's Up!</h2>
+            <p className="text-gray-600 mb-2">
+              <span className="font-bold text-blue-600">Sets Completed: {challengeSetsCompleted}</span>
+            </p>
             <p className="text-gray-600 mb-6">
-              Final Score: <span className="font-bold text-purple-600">{gameState.score.toLocaleString()}</span>
+              <span className="font-bold text-green-600">Correct Answers: {challengeCorrectTotal}</span>
             </p>
             <div className="flex gap-3">
               <button
@@ -580,10 +746,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             onBackToHome();
           }
         }}
+        onBackToCategories={onBackToHome}
         players={(() => {
           const currentResult = {
             name: gameState.playerName || 'Guest',
-            score: gameState.score,
+            score: gameState.mode === 'timed' ? challengeCorrectTotal : gameState.score,
             mode: gameState.mode,
             timestamp: Date.now(),
             category: categoryId,
@@ -617,6 +784,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         isOpen={showTimeUp}
         onClose={handleTimeUpClose}
         score={gameState.score}
+        combos={totalCombos}
+        correct={totalCorrect}
+        wrong={totalWrong}
       />
 
       {/* Only show countdown for timed mode if not showing leaderboard or time up */}
@@ -642,6 +812,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
           </div>
         </div>
       )}
+
+      {/* Audio elements for correct/wrong/ticking sounds */}
+      <audio ref={correctAudioRef} src="/correct-6033.mp3" preload="auto" />
+      <audio ref={wrongAudioRef} src="/negative_beeps-6008.mp3" preload="auto" />
+      <audio ref={tickingAudioRef} src="/clock-ticking-sound-effect-240503.mp3" preload="auto" />
     </div>
   );
 };

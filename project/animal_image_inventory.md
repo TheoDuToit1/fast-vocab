@@ -102,10 +102,7 @@ seal-1864471.png
 snake-3065738.png
 🔴 Hard (48 images – rare animals, long/tricky names):
 markdown
-Copy
-Edit
-hermit-crab-1864498.png
-bison-1864564.png
+Copy 
 chameleon-1864575.png
 hippopotamus-1864568.png
 shark-3751509.png

@@ -5,11 +5,12 @@ import { Player } from '../../types/game';
 interface LeaderboardModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBackToCategories: () => void;
   players: Player[];
   clearLeaderboard: () => void;
 }
 
-const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, players, clearLeaderboard }) => {
+const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, onBackToCategories, players, clearLeaderboard }) => {
   if (!isOpen) return null;
 
   // Tab state: 'all', 'normal' (Practice), or 'timed' (Challenge)
@@ -69,35 +70,37 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, pl
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl p-8 shadow-2xl transform animate-in zoom-in duration-300 max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-yellow-600" />
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center z-50">
+      <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-0 shadow-2xl transform animate-in zoom-in duration-300 max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden border-4 border-white">
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-500 rounded-t-3xl px-10 py-8 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center shadow-xl">
+              <Trophy className="w-12 h-12 text-yellow-100 drop-shadow-lg" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">Leaderboard</h2>
+            <h2 className="text-4xl font-extrabold text-white drop-shadow-lg tracking-tight">Leaderboard</h2>
           </div>
           <button
-            onClick={onClose}
-            className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+            onClick={onBackToCategories}
+            className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center hover:bg-white/60 transition-colors shadow-lg"
+            title="Back to Categories"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-7 h-7 text-white" />
           </button>
         </div>
 
         {/* Clear Leaderboard Button */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end px-10 pt-6">
           <button
             onClick={clearLeaderboard}
-            className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition-colors text-sm"
+            className="px-6 py-2 rounded-xl bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold shadow hover:from-red-500 hover:to-pink-600 transition-all text-base"
           >
             Clear Leaderboard
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex justify-center gap-4 mb-6">
+        <div className="flex justify-center gap-4 mt-4 mb-6">
           <button
             className={`px-6 py-2 rounded-full font-semibold transition-colors ${tab === 'all' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             onClick={() => setTab('all')}
@@ -119,7 +122,7 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, pl
         </div>
 
         {/* Filters */}
-        <div className="flex justify-center gap-4 mb-4">
+        <div className="flex justify-center gap-4 mb-6">
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
@@ -142,36 +145,49 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, pl
           </select>
         </div>
 
-        <div className="space-y-3 overflow-y-auto max-h-96">
+        <div className="space-y-4 overflow-y-auto max-h-[45vh] px-10 pb-10">
           {sortedPlayers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>No scores yet!</p>
-              <p className="text-sm">Be the first to play and set a record.</p>
+            <div className="text-center py-16 text-gray-400">
+              <Trophy className="w-24 h-24 mx-auto mb-6 opacity-30" />
+              <h2 className="text-2xl font-bold mb-2">No Scores Yet!</h2>
+              <p className="mb-8">Be the first to play and set a record.</p>
             </div>
           ) : (
             sortedPlayers.map((player, index) => (
               <div
                 key={`${player.name}-${player.timestamp}`}
-                className={`flex items-center gap-4 p-4 rounded-xl border-2 ${getRankColor(index)} transition-all duration-200`}
+                className={`flex items-center gap-8 p-6 rounded-2xl border-2 ${getRankColor(index)} transition-all duration-200 shadow hover:shadow-xl bg-white/80`}
               >
                 <div className="flex-shrink-0">
                   {getRankIcon(index)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 truncate">{player.name}</p>
-                  <p className="text-sm text-gray-500 capitalize">
-                    {player.mode} mode
-                    {player.category ? ` | ${player.category}` : ''}
-                    {player.difficulty ? ` | ${player.difficulty}` : ''}
-                    {player.speed ? ` | ${player.speed}` : ''}
+                  <div className="flex items-center gap-3 mb-1">
+                    <p className="font-bold text-xl text-gray-800 truncate">{player.name}</p>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                      player.mode === 'timed' 
+                        ? 'bg-orange-100 text-orange-700' 
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {player.mode}
+                    </div>
+                    {player.category && <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">{player.category}</span>}
+                    {player.difficulty && <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">{player.difficulty}</span>}
+                    {player.speed && <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">{player.speed}</span>}
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {new Date(player.timestamp).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-lg text-gray-800">{player.score.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(player.timestamp).toLocaleDateString()}
-                  </p>
+                  <p className="font-bold text-2xl text-purple-700">{player.score.toLocaleString()}</p>
+                  <p className="text-sm text-gray-500">points</p>
                 </div>
               </div>
             ))
