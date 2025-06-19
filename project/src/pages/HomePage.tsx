@@ -92,7 +92,7 @@ const HomePage: React.FC = () => {
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Track Progress</h3>
-              <p className="text-gray-600">Leaderboards, scoring system, and combo multipliers to track your improvement.</p>
+              <p className="text-gray-600">Leaderboards, scoring system, and continuous bonus to track your improvement.</p>
             </div>
           </div>
         </div>

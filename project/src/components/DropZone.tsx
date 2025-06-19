@@ -12,6 +12,7 @@ interface QuizItem {
   image: string;
   category: string;
   hex?: string;
+  display?: number;
 }
 
 interface DropZoneProps {
@@ -41,18 +42,16 @@ const DropZone: React.FC<DropZoneProps> = ({
   };
 
   if (matchedItem) {
-    // If matchedItem is a number (has value property), render styled number text
-    const isNumber = typeof (matchedItem as any).value === 'number';
     return (
       <div className="relative">
         <div className="w-32 h-32 rounded-full bg-green-100 border-4 border-green-400 flex items-center justify-center shadow-lg transform transition-all duration-500 ease-out animate-pulse">
           <div className="flex flex-col items-center gap-2 text-green-700">
-            {isNumber ? (
+            {matchedItem.display !== undefined ? (
               <span
-                className={`text-4xl font-bold font-sans ${['text-pink-500','text-blue-500','text-green-500','text-yellow-500','text-purple-500','text-orange-500','text-emerald-500','text-cyan-500','text-fuchsia-500','text-lime-500'][(matchedItem as any).value % 10]}`}
-                style={{ fontFamily: 'Comic Sans MS, Comic Sans, cursive, sans-serif' }}
+                className="text-3xl font-extrabold mb-1 select-none"
+                style={{ color: matchedItem.hex || '#6366f1', fontFamily: 'Comic Sans MS, Comic Neue, cursive, Inter, sans-serif' }}
               >
-                {(matchedItem as any).value}
+                {matchedItem.display}
               </span>
             ) : matchedItem.hex ? (
               <div
@@ -60,11 +59,11 @@ const DropZone: React.FC<DropZoneProps> = ({
                 style={{ background: matchedItem.hex }}
               />
             ) : (
-            <img
-              src={matchedItem.image}
-              alt={matchedItem.name}
-              className="w-12 h-12 rounded-full object-cover border-2 border-green-500"
-            />
+              <img
+                src={matchedItem.image}
+                alt={matchedItem.name}
+                className="w-12 h-12 rounded-full object-cover border-2 border-green-500"
+              />
             )}
             <span className="text-sm font-bold">✓ {zone.label}</span>
           </div>

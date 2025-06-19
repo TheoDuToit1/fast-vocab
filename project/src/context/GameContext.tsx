@@ -16,15 +16,15 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 const initialGameState: GameState = {
   mode: 'normal',
-  speed: 'normal',
-  difficulty: 'normal',
   score: 0,
-  combo: 0,
+  continuousBonus: 0,
   currentSet: 0,
   timeLeft: 60,
   isPlaying: false,
   isPaused: false,
-  playerName: ''
+  playerName: '',
+  category: '',
+  gameSessionId: Date.now(),
 };
 
 type GameAction = 
@@ -40,9 +40,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
       return { ...state, ...action.payload };
     case 'RESET_GAME':
-      return initialGameState;
+      return { ...initialGameState, gameSessionId: Date.now() };
     case 'RESET_WITH_MODE':
-      return { ...initialGameState, mode: action.payload };
+      return { ...initialGameState, mode: action.payload, gameSessionId: Date.now() };
     default:
       return state;
   }

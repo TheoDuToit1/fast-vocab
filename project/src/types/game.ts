@@ -29,8 +29,8 @@ export interface Player {
   mode: GameMode;
   timestamp: number;
   category: string;
-  difficulty: string;
-  speed: string;
+  difficulty?: string;
+  speed?: string;
 }
 
 export type GameMode = 'study' | 'normal' | 'timed';
@@ -46,14 +46,13 @@ export interface GameSettings {
 
 export interface GameState {
   mode: GameMode;
-  speed: GameSpeed;
-  difficulty: GameDifficulty;
   score: number;
-  combo: number;
+  continuousBonus: number;
   currentSet: number;
   timeLeft: number;
   isPlaying: boolean;
   isPaused: boolean;
   playerName: string;
   category: string;
+  gameSessionId?: number;
 }

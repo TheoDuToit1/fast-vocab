@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Quiz from '../components/Quiz';
 import StudyMode from '../components/StudyMode';
 import NameInputModal from '../components/modals/NameInputModal';
@@ -18,8 +18,6 @@ const QuizPage: React.FC = () => {
   const mode = searchParams.get('mode') as GameMode || 'normal';
   const speed = searchParams.get('speed') || undefined;
   const difficulty = searchParams.get('difficulty') || undefined;
-  const fromModal = searchParams.get('fromModal') === '1';
-  const session = searchParams.get('session') || '';
 
   // If all settings are present, skip GameModeModal
   // For Challenge Mode (timed), only mode and difficulty are required
@@ -40,12 +38,6 @@ const QuizPage: React.FC = () => {
       }
     }
   }, [mode, speed, difficulty, updateGameState, resetGame, isInitialized, skipModeModal]);
-
-  useEffect(() => {
-    if (mode === 'study' && !fromModal) {
-      navigate('/categories', { replace: true });
-    }
-  }, [mode, fromModal, navigate]);
 
   const handleGameSettings = (settings: GameSettings) => {
     console.log('handleGameSettings called with:', settings);
@@ -77,16 +69,11 @@ const QuizPage: React.FC = () => {
     navigate(newUrl.pathname + newUrl.search, { replace: true });
   };
 
-  // Get category from params
-  const { category = '' } = useParams();
-
-  // Show study mode if mode is 'study' and fromModal is present. Skip all modals and name input.
-  if (mode === 'study' && fromModal) {
+  // Show study mode if mode is 'study'. Skip all modals.
+  if (mode === 'study') {
     return (
       <div className="min-h-screen">
         <StudyMode 
-          key={session}
-          category={category}
           onBackToHome={handleBackToHome}
           onStartQuiz={handleStartQuiz}
         />

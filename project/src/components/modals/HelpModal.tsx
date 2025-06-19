@@ -38,8 +38,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-3 text-gray-600">
               <p>• Drag animal images to their correct category circles</p>
               <p>• Match all animals in a set to progress</p>
-              <p>• Build combos by making consecutive correct matches</p>
-              <p>• Avoid incorrect matches to maintain your combo</p>
+              <p>• Build continuous bonuses by making consecutive correct matches</p>
+              <p>• Avoid incorrect matches to maintain your continuous bonus</p>
             </div>
           </section>
 
@@ -52,19 +52,23 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-3">
               <div className="bg-green-50 p-4 rounded-xl">
                 <p className="font-semibold text-green-800 mb-2">Correct Match</p>
-                <p className="text-green-600">+250 points × combo multiplier</p>
+                <p className="text-green-600">+10, +20, +30 points per correct answer (Easy, Normal, Hard)</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-xl">
+                <p className="font-semibold text-purple-800 mb-2">Continuous Bonus</p>
+                <div className="text-purple-600 space-y-1">
+                  <p>• 5, 10, 15... up to x2.5 for streaks</p>
+                </div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-xl">
+                <p className="font-semibold text-yellow-800 mb-2">⚡ Speed Bonus</p>
+                <div className="text-yellow-600 space-y-1">
+                  <p>• 3 correct in 2s = +25 points</p>
+                </div>
               </div>
               <div className="bg-red-50 p-4 rounded-xl">
                 <p className="font-semibold text-red-800 mb-2">Incorrect Match</p>
-                <p className="text-red-600">-100 points (combo resets)</p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-xl">
-                <p className="font-semibold text-purple-800 mb-2">Combo Multipliers</p>
-                <div className="text-purple-600 space-y-1">
-                  <p>• 3+ matches: 2x points</p>
-                  <p>• 6+ matches: 3x points</p>
-                  <p>• 12+ matches: 5x points</p>
-                </div>
+                <p className="text-red-600">-0 points (continuous bonus resets)</p>
               </div>
             </div>
           </section>

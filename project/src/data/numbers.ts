@@ -87,8 +87,8 @@ export function getNumberQuizItem(n: number): NumberQuizItem {
 }
 
 export function generateRandomNumbers(count: number, digits: number): number[] {
-  const min = digits === 1 ? 0 : digits === 2 ? 10 : 100;
-  const max = digits === 1 ? 9 : digits === 2 ? 99 : 999;
+  const min = digits === 1 ? 0 : digits === 2 ? 10 : digits === 3 ? 100 : 1000;
+  const max = digits === 1 ? 9 : digits === 2 ? 99 : digits === 3 ? 999 : 9999;
   const set = new Set<number>();
   while (set.size < count) {
     const n = Math.floor(Math.random() * (max - min + 1)) + min;

@@ -43,7 +43,7 @@ export const categories = {
     description: 'Match numbers to their English words',
     icon: '🔢',
     color: 'from-blue-400 to-indigo-500',
-    image: 'https://images.pexels.com/photos/1329291/pexels-photo-1329291.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-    itemCount: 900
+    image: 'https://images.pexels.com/photos/207569/pexels-photo-207569.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
+    itemCount: 27
   }
 };

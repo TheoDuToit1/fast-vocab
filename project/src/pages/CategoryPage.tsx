@@ -5,6 +5,7 @@ import GameModeModal from '../components/modals/GameModeModal';
 import HelpModal from '../components/modals/HelpModal';
 import { GameMode } from '../types/game';
 import { categories as categoriesData } from '../data/categories';
+import { useGame } from '../context/GameContext';
 
 interface Category {
   id: string;
@@ -21,12 +22,13 @@ const categories = [
   categoriesData.animals,
   categoriesData.colors,
   categoriesData.alphabet,
-  categoriesData.numbers
+  categoriesData.numbers,
 ];
 
 const CategoryPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { updateGameState } = useGame();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showModeModal, setShowModeModal] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -41,10 +43,10 @@ const CategoryPage: React.FC = () => {
       if (settings.mode === 'study') {
         setShowModeModal(false);
         setTimeout(() => {
-          const session = Math.random().toString(36).slice(2);
-          navigate(`/quiz/${selectedCategory}?mode=study&fromModal=1&session=${session}`);
+          navigate(`/quiz/${selectedCategory}?mode=study`);
         }, 0);
       } else {
+        updateGameState({ gameSessionId: Date.now() });
         let url = `/quiz/${selectedCategory}?mode=${settings.mode}`;
         if (settings.speed) url += `&speed=${settings.speed}`;
         if (settings.difficulty) url += `&difficulty=${settings.difficulty}`;
@@ -127,9 +129,9 @@ const CategoryPage: React.FC = () => {
                   
                   {/* Difficulty Badge */}
                   {category.difficulty && (
-                  <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(category.difficulty)}`}>
-                    {category.difficulty}
-                  </div>
+                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(category.difficulty)}`}>
+                      {category.difficulty}
+                    </div>
                   )}
                 </div>
 

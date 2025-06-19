@@ -2,7 +2,7 @@ import React, { useEffect, useState, useImperativeHandle, forwardRef } from 'rea
 import { GameSpeed } from '../types/game';
 
 interface TimerBarProps {
-  speed: GameSpeed;
+  speed?: GameSpeed;
   isPlaying: boolean;
   isPaused: boolean;
   onTimeUp: () => void;
@@ -13,7 +13,7 @@ export interface TimerBarHandle {
   subtractTime: (percent: number) => void;
 }
 
-const TimerBar = forwardRef<TimerBarHandle, TimerBarProps>(({ speed, isPlaying, isPaused, onTimeUp }, ref) => {
+const TimerBar = forwardRef<TimerBarHandle, TimerBarProps>(({ speed = 'normal', isPlaying, isPaused, onTimeUp }, ref) => {
   const [timeLeft, setTimeLeft] = useState(100); // Percentage
 
   // Get total time based on speed

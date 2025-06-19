@@ -60,7 +60,7 @@ const GameModeModal: React.FC<GameModeModalProps> = ({ isOpen, onSelectSettings,
           >
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                <img src="/savi-explorer.png" alt="Logo" className="w-8 h-8 object-contain rounded-full" />
+                <BookOpen className="w-6 h-6 text-green-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-800">Study Mode</h3>
             </div>

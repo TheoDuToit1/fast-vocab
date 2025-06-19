@@ -54,7 +54,7 @@ export const starterAnimals = [
   'dolphin-3065698.png',
   'deer-3065695.png',
   'bear-3065687.png',
-].slice(0, 40).map(name => `/images/animals/easy/${name}`);
+].slice(0, 40).map(name => `/images/animals/starter/${name}`);
 
 // Mover (was normal)
 export const moverAnimals = [
@@ -95,7 +95,7 @@ export const moverAnimals = [
   'fox-3065706.png',
   'eagle-3065699.png',
   'bat-3065684.png',
-].slice(0, 40).map(name => `/images/animals/normal/${name}`);
+].slice(0, 40).map(name => `/images/animals/mover/${name}`);
 
 // Flyer (was hard)
 export const flyerAnimals = [
@@ -132,7 +132,7 @@ export const flyerAnimals = [
   'lion-fish-3751367.png',
   'anglerfish-3751354.png',
   'blobfish-3751344.png',
-].slice(0, 40).map(name => `/images/animals/hard/${name}`);
+].slice(0, 40).map(name => `/images/animals/flyer/${name}`);
 
 // Cumulative sets
 export const moverSet = [...starterAnimals, ...moverAnimals];
