@@ -75,15 +75,47 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // Build and shuffle all sets/items ONCE per game session
   useEffect(() => {
-    // Build items array as before
+    // --- Rebuild: treat alphabet exactly like animals ---
     let items: any[] = [];
     if (categoryId === 'alphabet') {
-      const validAlphabetItems = alphabetData.starter.filter(item => !!item.name);
-      console.log('Invalid alphabet items:', alphabetData.starter.filter(item => !item.name));
-      items = validAlphabetItems.map((item, i) => ({ ...item, id: item.name.toLowerCase() + '-' + i }));
-      // Log and filter for debugging
-      console.log('Alphabet pool:', items);
-      items = items.filter(item => item.id && item.name && item.image);
+      // Use the same logic as animals for building pool, sets, and shuffling
+      const normalizeAlphabet = (item: { name: string, image: string }, i: number) => ({
+        id: item.name.toLowerCase() + '-' + i,
+        name: item.name,
+        image: item.image,
+        category: 'alphabet',
+        hex: undefined,
+      });
+      items = alphabetData.starter.map(normalizeAlphabet);
+    } else if (categoryId === 'animals') {
+      const difficulty = (gameState as any).difficulty || 'starter';
+      const normalizeAnimal = (imgPath: string) => {
+        const fileName = imgPath.split('/').pop() || '';
+        const base = fileName.replace(/\.[^/.]+$/, '');
+        let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (imgPath.includes('parrot-1864474.png')) displayName = 'Bird';
+        else if (/^stingray/i.test(base)) displayName = 'Stingray';
+        else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
+        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
+        return {
+          id: base,
+          name: displayName,
+          image: imgPath,
+          category: '',
+          hex: undefined,
+        };
+      };
+      if (difficulty === 'starter') {
+        items = animalsData.starter.map(normalizeAnimal);
+      } else if (difficulty === 'mover') {
+        items = [...animalsData.starter, ...animalsData.mover].map(normalizeAnimal);
+      } else if (difficulty === 'flyer') {
+        const combinedFlyerSet = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer];
+        const shuffledFlyer = shuffleArray(combinedFlyerSet);
+        items = shuffledFlyer.map(normalizeAnimal);
+      } else {
+        items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(normalizeAnimal); // fallback
+      }
     } else if (categoryId === 'colors') {
       const difficulty = (gameState as any).difficulty || 'starter';
       // Define color sets
@@ -153,37 +185,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         };
       });
       items = items.filter(item => item.id && item.name);
-    } else if (categoryId === 'animals') {
-      // Use correct set based on difficulty
-      const difficulty = (gameState as any).difficulty || 'starter';
-      const normalizeAnimal = (imgPath: string) => {
-        const fileName = imgPath.split('/').pop() || '';
-        const base = fileName.replace(/\.[^/.]+$/, '');
-        let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        if (imgPath.includes('parrot-1864474.png')) displayName = 'Bird';
-        else if (/^stingray/i.test(base)) displayName = 'Stingray';
-        else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
-        else if (/^panda-bear/i.test(base)) displayName = 'Panda';
-        return {
-          id: base,
-          name: displayName,
-          image: imgPath,
-          category: '',
-          hex: undefined,
-        };
-      };
-      if (difficulty === 'starter') {
-        items = animalsData.starter.map(normalizeAnimal);
-      } else if (difficulty === 'mover') {
-        items = [...animalsData.starter, ...animalsData.mover].map(normalizeAnimal);
-      } else if (difficulty === 'flyer') {
-        const combinedFlyerSet = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer];
-        const shuffledFlyer = shuffleArray(combinedFlyerSet);
-        items = shuffledFlyer.map(normalizeAnimal);
-      } else {
-        items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(normalizeAnimal); // fallback
-      }
-      animalPoolRef.current = items;
     } else if (categoryId === 'clothes') {
       const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeClothes = (item: { name: string, image: string }) => ({
@@ -289,10 +290,12 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       sets[sets.length - 1].push(...last);
     }
     setShuffledSets(sets.map(set => shuffleArray(set)));
-  }, [categoryId, gameState.mode, gameState.gameSessionId, (gameState as any).difficulty]);
+  }, [categoryId, gameState.mode, gameState.gameSessionId]);
 
   const [currentSet, setCurrentSet] = useState(0);
   const currentItems = shuffledSets[currentSet] || [];
+  const currentItemsRef = useRef<any[]>(currentItems);
+  currentItemsRef.current = currentItems; // Always update on render
   const isSetComplete = matchedPairs.length === currentItems.length && matchedPairs.length > 0;
 
   // Vietnamese voice state
@@ -305,9 +308,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const correctAudioRef = useRef<HTMLAudioElement | null>(null);
   const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
   const tickingAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Generate drop zones from the same shuffled currentItems array
-  // (delete the entire dropZones declaration)
 
   // Calculate combo multiplier
   // (delete the entire getComboMultiplier function)
@@ -333,13 +333,17 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }, 100);
   }, [gameState.mode, updateGameState, resetTimer]);
 
-  // Handle drag events
+  // Use a ref for draggedItem to avoid stale closure issues
+  const draggedItemRef = useRef<string | null>(null);
+
   const handleDragStart = useCallback((itemId: string) => {
     setDraggedItem(itemId);
+    draggedItemRef.current = itemId;
   }, []);
 
   const handleDragEnd = useCallback(() => {
     setDraggedItem(null);
+    draggedItemRef.current = null;
     setHoveredZone(null);
   }, []);
 
@@ -404,80 +408,92 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  // --- Debug state ---
+  const [debugText, setDebugText] = useState('');
+  const [forceRerender, setForceRerender] = useState(0);
+
   // --- Core drop logic ---
   const handleItemDrop = useCallback((itemId: string, zoneId: string, event: any) => {
     if (!itemId || !gameState.isPlaying) return;
-    const item = currentItems.find((item: QuizItem) => item.id === itemId);
+    const item = currentItemsRef.current.find((item: QuizItem) => item.id === itemId);
     const isCorrect = item?.id === zoneId;
-    const now = Date.now();
-
-    if (gameState.mode === 'timed') {
-      if (isCorrect) {
-        setMatchedPairs(prev => [...prev, { itemId, zoneId }]);
-        setTotalCorrect(prev => prev + 1);
-        playCorrectSound();
-        if (item) setTimeout(() => speakWord(item.name), 600);
-      } else {
-        setIncorrectDrop(itemId);
-        setTimeout(() => setIncorrectDrop(null), 1000);
-        setTotalWrong(prev => prev + 1);
-        playWrongSound();
-      }
-      setDraggedItem(null);
-      setHoveredZone(null);
+    setDebugText(`DROP: itemId=${itemId}, zoneId=${zoneId}, isCorrect=${isCorrect}, currentSet=${currentSet}, matchedPairs=${JSON.stringify(matchedPairs)}`);
+    console.log('[DEBUG] handleItemDrop currentItems:', currentItemsRef.current.map(i => i.id));
+    if (!item) {
+      setDropWarning(`No item found for id: ${itemId}`);
+      setTimeout(() => setDropWarning(null), 2000);
       return;
     }
+    if (!currentItemsRef.current.some(i => i.id === zoneId)) {
+      setDropWarning(`No drop zone found for id: ${zoneId}`);
+      setTimeout(() => setDropWarning(null), 2000);
+      return;
+    }
+    const now = Date.now();
 
-    // Practice Mode scoring
-    let points = BASE_POINTS;
-    let speedBonusPoints = 0;
-    if (isCorrect) {
-      setTotalCorrect(prev => prev + 1);
-      const updatedTimestamps = [...recentCorrectTimestamps, now].filter(ts => now - ts <= 2000);
-      setRecentCorrectTimestamps(updatedTimestamps);
-      if (comboActive) {
-        points = Math.round(points * comboMultiplier);
-      }
-      if (updatedTimestamps.length >= 3) {
-        setShowSpeedBonus(true);
-        setTimeout(() => setShowSpeedBonus(false), 1200);
-        setRecentCorrectTimestamps([]);
-        speedBonusPoints = Math.round(points * 1.6);
-        updateGameState({ score: gameState.score + speedBonusPoints });
-        const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
-        addFloatingScore(speedBonusPoints, rect.left + rect.width / 2, rect.top - 40);
+    const speakQuizWord = (item: QuizItem) => {
+      if (!item) return;
+      if (categoryId === 'alphabet') {
+        speakWord(item.name);
       } else {
-        updateGameState({ score: gameState.score + points });
-        const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
-        addFloatingScore(points, rect.left + rect.width / 2, rect.top);
+        speakWord(item.name);
       }
-      setMatchedPairs(prev => [...prev, { itemId, zoneId }]);
+    };
+
+    const advanceSet = () => {
+      setDebugText(dt => dt + ` | ADVANCE SET: currentSet=${currentSet + 1}`);
+      let nextSet = currentSet + 1;
+      if (nextSet >= shuffledSets.length) {
+        const allItems = shuffledSets.flat();
+        const reshuffled = shuffleArray(allItems).slice(0, 3);
+        setShuffledSets([reshuffled]);
+        setCurrentSet(0);
+      } else {
+        setCurrentSet(nextSet);
+      }
+      setMatchedPairs([]);
+      setDraggedItem(null);
+      setHoveredZone(null);
+      setIncorrectDrop(null);
       setCurrentSetMistake(false);
+      setForceRerender(f => f + 1); // Force re-render
+    };
+
+    if (isCorrect) {
+      setMatchedPairs(prev => {
+        const updated = [...prev, { itemId, zoneId }];
+        console.log('[MATCHED] matchedPairs updated:', updated);
+        // If this was the last match in the set, delay and advance set
+        if (updated.length === currentItemsRef.current.length) {
+          setTimeout(advanceSet, 1200);
+        }
+        return updated;
+      });
+      setTotalCorrect(prev => prev + 1);
       playCorrectSound();
-      if (item) setTimeout(() => speakWord(item.name), 600);
-      if (timerBarRef.current) timerBarRef.current.addTime(5);
+      if (item) setTimeout(() => speakQuizWord(item), 600);
+      const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
+      addFloatingScore(1, rect.left + rect.width / 2, rect.top);
+      setForceRerender(f => f + 1); // Force re-render
     } else {
-      setCurrentSetMistake(true);
-      setRecentCorrectTimestamps([]);
-      setShowSpeedBonus(false);
-      setComboActive(false);
-      setComboMultiplier(1.0);
       setIncorrectDrop(itemId);
       setTimeout(() => setIncorrectDrop(null), 1000);
       setTotalWrong(prev => prev + 1);
       playWrongSound();
-      if (timerBarRef.current) timerBarRef.current.subtractTime(7);
+      setForceRerender(f => f + 1); // Force re-render
     }
     setDraggedItem(null);
     setHoveredZone(null);
-  }, [gameState.isPlaying, gameState.mode, BASE_POINTS, comboActive, comboMultiplier, addFloatingScore, playCorrectSound, playWrongSound, speakWord, timerBarRef, updateGameState, currentItems, recentCorrectTimestamps]);
+    return;
+  }, [gameState.isPlaying, currentSet, shuffledSets, categoryId, addFloatingScore, playCorrectSound, playWrongSound, speakWord]);
 
   // --- Drop logic for drag-and-drop ---
   const handleDrop = useCallback((zoneId: string, event: React.DragEvent) => {
+    console.log('[QUIZ] handleDrop called', zoneId, draggedItemRef.current);
     event.preventDefault();
-    if (!draggedItem || !gameState.isPlaying) return;
-    handleItemDrop(draggedItem, zoneId, event);
-  }, [draggedItem, gameState.isPlaying, handleItemDrop]);
+    if (!draggedItemRef.current || !gameState.isPlaying) return;
+    handleItemDrop(draggedItemRef.current, zoneId, event);
+  }, [gameState.isPlaying, handleItemDrop]);
 
   // --- Tap-to-drop handler ---
   const handleZoneTap = useCallback((zoneId: string) => {
@@ -651,7 +667,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         if (tickingAudioRef.current.paused) {
           tickingAudioRef.current.currentTime = 0;
           tickingAudioRef.current.play();
-          console.log('Ticking sound started (auto)');
         }
       }
     } else {
@@ -659,7 +674,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         if (!tickingAudioRef.current.paused) {
           tickingAudioRef.current.pause();
           tickingAudioRef.current.currentTime = 0;
-          console.log('Ticking sound stopped');
         }
       }
     }
@@ -671,7 +685,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       if (tickingAudioRef.current) {
         tickingAudioRef.current.pause();
         tickingAudioRef.current.currentTime = 0;
-        console.log('Ticking sound stopped (time up/modal)');
       }
     }
   }, [isTimeUp, showTimeUp]);
@@ -745,7 +758,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         setHoveredZone(null);
         setIncorrectDrop(null);
         setCurrentSetMistake(false);
-      }, 500); // Short delay for feedback
+      }, 1200); // Increased delay for feedback in Challenge Mode
     }
   }, [isSetComplete, gameState.mode, categoryId, currentSet]);
 
@@ -758,26 +771,24 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     setSelectedItemId(itemId);
   }, [gameState.isPlaying]);
 
+  // Add drop warning state and UI
+  const [dropWarning, setDropWarning] = useState<string | null>(null);
+
+  // Debug overlay for currentItems, shuffledSets, currentSet
+  const debugOverlay = (
+    <div style={{position:'fixed',bottom:60,left:10,zIndex:9999,background:'#111',color:'#0f0',padding:'8px 14px',borderRadius:8,fontSize:12,opacity:0.92,maxWidth:400,wordBreak:'break-all'}}>
+      <div>currentSet: {currentSet}</div>
+      <div>currentItems: {JSON.stringify(currentItems.map(i => i.id))}</div>
+      <div>shuffledSets: {JSON.stringify(shuffledSets.map(set => set.map(i => i.id)))}</div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
       {/* Audio elements for sound effects */}
       <audio ref={correctAudioRef} src="/correct-6033.mp3" preload="auto" />
       <audio ref={wrongAudioRef} src="/negative_beeps-6008.mp3" preload="auto" />
       <audio ref={tickingAudioRef} src="/clock-ticking-sound-effect-240503.mp3" preload="auto" />
-      {/* Debug: Test Ticking Sound Button */}
-      <button
-        style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999 }}
-        onClick={() => {
-          if (tickingAudioRef.current) {
-            tickingAudioRef.current.currentTime = 0;
-            tickingAudioRef.current.volume = 0.7;
-            tickingAudioRef.current.play();
-            console.log('Manual ticking sound test');
-          }
-        }}
-      >
-        Test Ticking Sound
-      </button>
       {/* Floating Scores */}
       {floatingScores.map(floatingScore => (
         <ScoreAnimation
@@ -1013,6 +1024,30 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
           No valid items found for this category. Please check your data source.
         </div>
       )}
+
+      {dropWarning && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-bold animate-bounce">
+          {dropWarning}
+        </div>
+      )}
+
+      {debugText && (
+        <div className="fixed top-36 left-1/2 -translate-x-1/2 bg-black text-green-300 px-6 py-3 rounded-xl shadow-lg z-50 font-mono text-xs">
+          {debugText}
+          <br />currentSet: {currentSet}
+          <br />matchedPairs: {JSON.stringify(matchedPairs)}
+          <br />currentItems: {JSON.stringify(currentItems.map(i => i.id))}
+        </div>
+      )}
+
+      {/* In the main return, show matchedPairs overlay */}
+      <div style={{position:'fixed',bottom:10,left:10,zIndex:9999,background:'#222',color:'#fff',padding:'6px 12px',borderRadius:8,fontSize:12,opacity:0.85}}>
+        matchedPairs: {JSON.stringify(matchedPairs)}
+        <br />last drop: {debugText}
+      </div>
+
+      {/* In the main return, render the debug overlay */}
+      {debugOverlay}
     </div>
   );
 };
