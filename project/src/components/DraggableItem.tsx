@@ -122,12 +122,6 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
           Dragging...
         </div>
       )}
-      
-      {isIncorrect && (
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium animate-bounce">
-          -100 points!
-        </div>
-      )}
     </div>
   );
 };

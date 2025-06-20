@@ -480,6 +480,8 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       if (gameState.mode === 'normal' && timerBarRef.current) {
         timerBarRef.current.subtractTime(3);
       }
+      const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
+      addFloatingScore(-50, rect.left + rect.width / 2, rect.top);
       setTimeout(() => setIncorrectDrop(null), 1000);
       setTotalWrong(prev => prev + 1);
       playWrongSound();
