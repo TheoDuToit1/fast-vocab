@@ -651,7 +651,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         if (tickingAudioRef.current.paused) {
           tickingAudioRef.current.currentTime = 0;
           tickingAudioRef.current.play();
-          console.log('Ticking sound started');
+          console.log('Ticking sound started (auto)');
         }
       }
     } else {
@@ -763,6 +763,21 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       {/* Audio elements for sound effects */}
       <audio ref={correctAudioRef} src="/correct-6033.mp3" preload="auto" />
       <audio ref={wrongAudioRef} src="/negative_beeps-6008.mp3" preload="auto" />
+      <audio ref={tickingAudioRef} src="/clock-ticking-sound-effect-240503.mp3" preload="auto" />
+      {/* Debug: Test Ticking Sound Button */}
+      <button
+        style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999 }}
+        onClick={() => {
+          if (tickingAudioRef.current) {
+            tickingAudioRef.current.currentTime = 0;
+            tickingAudioRef.current.volume = 0.7;
+            tickingAudioRef.current.play();
+            console.log('Manual ticking sound test');
+          }
+        }}
+      >
+        Test Ticking Sound
+      </button>
       {/* Floating Scores */}
       {floatingScores.map(floatingScore => (
         <ScoreAnimation
