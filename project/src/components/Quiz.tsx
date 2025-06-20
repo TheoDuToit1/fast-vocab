@@ -744,6 +744,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Audio elements for sound effects */}
+      <audio ref={correctAudioRef} src="/correct-6033.mp3" preload="auto" />
+      <audio ref={wrongAudioRef} src="/negative_beeps-6008.mp3" preload="auto" />
       {/* Floating Scores */}
       {floatingScores.map(floatingScore => (
         <ScoreAnimation

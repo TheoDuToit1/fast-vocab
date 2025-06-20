@@ -94,8 +94,9 @@ const DropZone: React.FC<DropZoneProps> = ({
     >
       <span className={`
         font-bold text-lg transition-colors duration-200
+        max-w-[7rem] text-center overflow-hidden whitespace-nowrap text-ellipsis
         ${isHovered ? 'text-blue-600' : 'text-gray-600'}
-      `}>
+      `} title={zone.label}>
         {zone.label}
       </span>
       
