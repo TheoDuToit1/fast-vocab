@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -91,7 +92,7 @@ html, body, #root, * {
 
 /* Playful font family globally */
 html, body {
-  font-family: 'Comic Sans MS', 'Comic Neue', 'Baloo', 'Fredoka', 'Inter', cursive, sans-serif !important;
+  font-family: 'Fredoka', 'Comic Sans MS', 'Comic Neue', 'Baloo', 'Inter', cursive, sans-serif !important;
 }
 
 /* Hero section animation utilities */
