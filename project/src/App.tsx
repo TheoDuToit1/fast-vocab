@@ -13,7 +13,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
           <Routes>
-            <Route path="/" element={<><HomePage /><AnimalGallery /></>} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/categories" element={<CategoryPage />} />
             <Route path="/quiz/:category" element={<QuizPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
