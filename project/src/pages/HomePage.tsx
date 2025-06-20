@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Trophy, HelpCircle, Volume2, Star, Zap, Target, BookOpen, Globe, Gamepad2, Eye } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HelpModal from '../components/modals/HelpModal';
+import { categories } from '../data/categories';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,24 +31,37 @@ const HomePage: React.FC = () => {
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
         {/* Header - more vibrant */}
         <div className="text-center mb-16">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-6">
+          {/* Tagline */}
+          <div className="text-lg sm:text-xl font-bold text-blue-400 mb-2 animate-fade-in-up tracking-wide uppercase">Unlock English, One Game at a Time!</div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-2">
             <img
               src="/savi-explorer.png"
               alt="Logo"
-              className="w-56 h-56 sm:w-[28rem] sm:h-[28rem] max-w-full object-contain drop-shadow-xl animate-fade-in"
+              className="w-56 h-56 sm:w-[28rem] sm:h-[28rem] max-w-full object-contain drop-shadow-xl animate-float"
               style={{ minWidth: 180 }}
             />
-            <h1 className="text-5xl sm:text-7xl font-extrabold bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+            <h1 className="text-5xl sm:text-7xl font-extrabold bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x animate-float-slow">
               Savi Vocab
             </h1>
           </div>
-          <p className="text-2xl text-gray-700 max-w-2xl mx-auto mb-8 font-semibold animate-fade-in">
+          <p className="text-2xl text-gray-700 max-w-2xl mx-auto mb-4 font-semibold animate-fade-in">
             Master vocabulary through interactive drag-and-drop games. Choose from multiple categories and challenge yourself!
           </p>
+          {/* Category Icons Row */}
+          <div className="flex flex-wrap justify-center gap-5 mb-6 animate-fade-in-up">
+            {Object.values(categories).filter(cat => !['food','clothes'].includes(cat.id)).map(cat => (
+              <div key={cat.id} className="flex flex-col items-center group cursor-pointer transition-transform hover:scale-110">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-lg bg-gradient-to-br from-white/80 to-blue-100 group-hover:from-blue-100 group-hover:to-white/80 animate-bounce-slow">
+                  {cat.icon}
+                </div>
+                <span className="mt-2 text-base font-bold text-gray-600 group-hover:text-blue-500 transition-colors">{cat.name}</span>
+              </div>
+            ))}
+          </div>
           {/* Main CTA - bolder, animated */}
           <button
             onClick={handleStartGame}
-            className="group relative bg-gradient-to-r from-purple-600 via-blue-500 to-green-400 text-white px-16 py-5 rounded-3xl font-extrabold text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 mb-8 animate-gradient-x bg-[length:200%_200%] bg-left hover:bg-right"
+            className="group relative bg-gradient-to-r from-purple-600 via-blue-500 to-green-400 text-white px-14 py-4 rounded-3xl font-extrabold text-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 mb-4 animate-glow animate-bounce"
           >
             <div className="flex items-center gap-4">
               <Play className="w-8 h-8" />
