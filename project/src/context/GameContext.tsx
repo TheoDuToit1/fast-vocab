@@ -17,7 +17,6 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 const initialGameState: GameState = {
   mode: 'normal',
   score: 0,
-  continuousBonus: 0,
   currentSet: 0,
   timeLeft: 60,
   isPlaying: false,

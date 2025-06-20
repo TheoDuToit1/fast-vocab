@@ -38,8 +38,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-3 text-gray-600">
               <p>• Drag animal images to their correct category circles</p>
               <p>• Match all animals in a set to progress</p>
-              <p>• Build continuous bonuses by making consecutive correct matches</p>
-              <p>• Avoid incorrect matches to maintain your continuous bonus</p>
+              <p>• Earn points for correct matches</p>
+              <p>• Avoid incorrect matches which reduce your score</p>
             </div>
           </section>
 
@@ -52,23 +52,19 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-3">
               <div className="bg-green-50 p-4 rounded-xl">
                 <p className="font-semibold text-green-800 mb-2">Correct Match</p>
-                <p className="text-green-600">+10, +20, +30 points per correct answer (Easy, Normal, Hard)</p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-xl">
-                <p className="font-semibold text-purple-800 mb-2">Continuous Bonus</p>
-                <div className="text-purple-600 space-y-1">
-                  <p>• 5, 10, 15... up to x2.5 for streaks</p>
-                </div>
+                <p className="text-green-600">+100 points per correct answer</p>
               </div>
               <div className="bg-yellow-50 p-4 rounded-xl">
-                <p className="font-semibold text-yellow-800 mb-2">⚡ Speed Bonus</p>
-                <div className="text-yellow-600 space-y-1">
-                  <p>• 3 correct in 2s = +25 points</p>
-                </div>
+                <p className="font-semibold text-yellow-800 mb-2">Combo Bonus</p>
+                <p className="text-yellow-600">Complete 3 sets to activate the combo multiplier!</p>
+                <p className="text-yellow-600">Multiplier increases by 0.5x for each set completed, starting from the 3rd.</p>
+                <p className="text-yellow-600 text-sm">(Example: 3 sets = 1.5x, 4 sets = 2.0x, 5 sets = 2.5x)</p>
+                <p className="text-yellow-600 text-sm">Maximum multiplier: 2.5x</p>
               </div>
               <div className="bg-red-50 p-4 rounded-xl">
                 <p className="font-semibold text-red-800 mb-2">Incorrect Match</p>
-                <p className="text-red-600">-0 points (continuous bonus resets)</p>
+                <p className="text-red-600">-50 points</p>
+                <p className="text-red-600 text-sm">Resets your combo streak</p>
               </div>
             </div>
           </section>
@@ -111,7 +107,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               Pro Tips
             </h3>
             <div className="space-y-2 text-gray-600">
-              <p>• Build long combos for maximum points</p>
+              <p>• Focus on accuracy for maximum points</p>
+              <p>• Complete more sets to increase your combo multiplier</p>
               <p>• Take your time in Normal mode to learn</p>
               <p>• Practice speed in Timed mode for better scores</p>
               <p>• Watch for visual feedback during drag and drop</p>

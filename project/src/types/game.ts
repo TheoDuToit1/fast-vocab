@@ -47,7 +47,6 @@ export interface GameSettings {
 export interface GameState {
   mode: GameMode;
   score: number;
-  continuousBonus: number;
   currentSet: number;
   timeLeft: number;
   isPlaying: boolean;

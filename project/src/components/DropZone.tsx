@@ -22,7 +22,7 @@ interface DropZoneProps {
   onDragOver: (zoneId: string) => void;
   onDragLeave: () => void;
   onDrop: (zoneId: string, event: React.DragEvent) => void;
-  onClick?: () => void;
+  onClick?: (zoneId: string, event: React.MouseEvent<HTMLDivElement>) => void;
   isActive?: boolean;
 }
 
@@ -44,6 +44,12 @@ const DropZone: React.FC<DropZoneProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     console.log('[DROPZONE] Drop event', zone.id, e.dataTransfer.getData('text/plain'));
     onDrop(zone.id, e);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (onClick) {
+      onClick(zone.id, e);
+    }
   };
 
   if (matchedItem) {
@@ -87,7 +93,7 @@ const DropZone: React.FC<DropZoneProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={onDragLeave}
       onDrop={handleDrop}
-      onClick={onClick}
+      onClick={handleClick}
       className={`
         relative w-32 h-32 rounded-full border-4 border-dashed
         flex items-center justify-center cursor-pointer

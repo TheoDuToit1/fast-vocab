@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Home, Volume2, VolumeX, HelpCircle, Trophy, Clock, Pause, Play } from 'lucide-react';
+import { Home, Volume2, VolumeX, HelpCircle, Trophy, Clock, Pause, Play, ArrowLeft } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import DropZone from './DropZone';
 import ScoreAnimation from './ScoreAnimation';
@@ -10,7 +10,7 @@ import TimeUpModal from './modals/TimeUpModal';
 import CountdownTimer from './CountdownTimer';
 import TimerBar, { TimerBarHandle } from './TimerBar';
 import { animalsData } from '../data/animals';
-import { flyerColors } from '../data/colors';
+import { colorsData } from '../data/colors';
 import { MatchedPair, FloatingScore, Player, QuizItem } from '../types/game';
 import { alphabetData } from '../data/alphabet';
 import { clothesData } from '../data/clothes';
@@ -87,7 +87,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         hex: undefined,
       });
       items = alphabetData.starter.map(normalizeAlphabet);
-      console.log('[ALPHABET DEBUG] items:', items);
     } else if (categoryId === 'animals') {
       const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeAnimal = (imgPath: string) => {
@@ -119,53 +118,35 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       }
     } else if (categoryId === 'colors') {
       const difficulty = (gameState as any).difficulty || 'starter';
-      // Define color sets
-      const starterColors = [
-        { name: 'Red', hex: '#FF0000' },
-        { name: 'Blue', hex: '#0000FF' },
-        { name: 'Yellow', hex: '#FFFF00' },
-        { name: 'Green', hex: '#008000' },
-        { name: 'Orange', hex: '#FFA500' },
-        { name: 'Purple', hex: '#800080' },
-        { name: 'Pink', hex: '#FFC0CB' },
-        { name: 'Brown', hex: '#A52A2A' },
-        { name: 'Black', hex: '#000000' },
-        { name: 'White', hex: '#FFFFFF' },
-      ];
-      const moverColors = [
-        { name: 'Gray', hex: '#808080' },
-        { name: 'Cyan', hex: '#00FFFF' },
-        { name: 'Magenta', hex: '#FF00FF' },
-        { name: 'Lime', hex: '#00FF00' },
-        { name: 'Navy', hex: '#000080' },
-        { name: 'Teal', hex: '#008080' },
-        { name: 'Maroon', hex: '#800000' },
-        { name: 'Olive', hex: '#808000' },
-        { name: 'Gold', hex: '#FFD700' },
-        { name: 'Silver', hex: '#C0C0C0' },
-      ];
-      const flyerColors = [
-        { name: 'Violet', hex: '#EE82EE' },
-        { name: 'Indigo', hex: '#4B0082' },
-        { name: 'Coral', hex: '#FF7F50' },
-        { name: 'Turquoise', hex: '#40E0D0' },
-        { name: 'Beige', hex: '#F5F5DC' },
-        { name: 'Peach', hex: '#FFDAB9' },
-        { name: 'Mint', hex: '#98FF98' },
-        { name: 'Lavender', hex: '#E6E6FA' },
-        { name: 'Aqua', hex: '#00FFFF' },
-        { name: 'Chocolate', hex: '#D2691E' },
-      ];
       let colorPool = [];
       if (difficulty === 'starter') {
-        colorPool = starterColors;
+        colorPool = [...colorsData.starter];
       } else if (difficulty === 'mover') {
-        colorPool = [...starterColors, ...moverColors];
+        colorPool = [...colorsData.starter, ...colorsData.mover];
       } else {
-        colorPool = [...starterColors, ...moverColors, ...flyerColors];
+        colorPool = [...colorsData.starter, ...colorsData.mover, ...colorsData.flyer];
       }
-      colorPool = colorPool.map(c => ({ ...c, id: c.name.toLowerCase(), name: c.name, image: c.hex, category: '' }));
-      colorPoolRef.current = colorPool;
+      console.log('Initial colorPool:', colorPool);
+      
+      // Ensure we have enough colors
+      if (colorPool.length === 0) {
+        console.error('No colors in pool!');
+        colorPool = [
+          { id: 'red', name: 'Red', hex: '#FF0000' },
+          { id: 'green', name: 'Green', hex: '#00FF00' },
+          { id: 'blue', name: 'Blue', hex: '#0000FF' }
+        ];
+      }
+      
+      colorPool = colorPool.map(c => ({ 
+        id: c.id || c.name.toLowerCase().replace(/\s+/g, '-'), 
+        name: c.name, 
+        image: '', 
+        hex: c.hex, 
+        category: '' 
+      }));
+      console.log('Processed colorPool:', colorPool);
+      
       items = colorPool;
     } else if (categoryId === 'numbers') {
       // Use the same number generation as Study Mode for the current difficulty
@@ -230,58 +211,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       // fallback
       items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
     }
-    // For colors, use a pool of 10/20/30, but sets of 3
-    let setSize = 3;
-    let colorPool: any[] = [];
-    if (categoryId === 'colors') {
-      const difficulty = (gameState as any).difficulty || 'starter';
-      const starterColors = [
-        { name: 'Red', hex: '#FF0000' },
-        { name: 'Blue', hex: '#0000FF' },
-        { name: 'Yellow', hex: '#FFFF00' },
-        { name: 'Green', hex: '#008000' },
-        { name: 'Orange', hex: '#FFA500' },
-        { name: 'Purple', hex: '#800080' },
-        { name: 'Pink', hex: '#FFC0CB' },
-        { name: 'Brown', hex: '#A52A2A' },
-        { name: 'Black', hex: '#000000' },
-        { name: 'White', hex: '#FFFFFF' },
-      ];
-      const moverColors = [
-        { name: 'Gray', hex: '#808080' },
-        { name: 'Cyan', hex: '#00FFFF' },
-        { name: 'Magenta', hex: '#FF00FF' },
-        { name: 'Lime', hex: '#00FF00' },
-        { name: 'Navy', hex: '#000080' },
-        { name: 'Teal', hex: '#008080' },
-        { name: 'Maroon', hex: '#800000' },
-        { name: 'Olive', hex: '#808000' },
-        { name: 'Gold', hex: '#FFD700' },
-        { name: 'Silver', hex: '#C0C0C0' },
-      ];
-      const flyerColors = [
-        { name: 'Violet', hex: '#EE82EE' },
-        { name: 'Indigo', hex: '#4B0082' },
-        { name: 'Coral', hex: '#FF7F50' },
-        { name: 'Turquoise', hex: '#40E0D0' },
-        { name: 'Beige', hex: '#F5F5DC' },
-        { name: 'Peach', hex: '#FFDAB9' },
-        { name: 'Mint', hex: '#98FF98' },
-        { name: 'Lavender', hex: '#E6E6FA' },
-        { name: 'Aqua', hex: '#00FFFF' },
-        { name: 'Chocolate', hex: '#D2691E' },
-      ];
-      if (difficulty === 'starter') {
-        colorPool = starterColors;
-      } else if (difficulty === 'mover') {
-        colorPool = [...starterColors, ...moverColors];
-      } else {
-        colorPool = [...starterColors, ...moverColors, ...flyerColors];
-      }
-      colorPool = colorPool.map(c => ({ ...c, id: c.name.toLowerCase(), name: c.name, image: c.hex, category: '' }));
-      items = colorPool;
-    }
-    // Split into sets of 3
+    
+    // For all categories, split into sets of 3
+    const setSize = 3;
     const sets = [];
     for (let i = 0; i < items.length; i += setSize) {
       sets.push(items.slice(i, i + setSize));
@@ -309,9 +241,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const correctAudioRef = useRef<HTMLAudioElement | null>(null);
   const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
   const tickingAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Calculate combo multiplier
-  // (delete the entire getComboMultiplier function)
 
   // Initialize game based on mode
   useEffect(() => {
@@ -366,14 +295,16 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }, 1500);
   }, []);
 
-  // --- State for set-based bonus ---
-  const [comboMultiplier, setComboMultiplier] = useState(1.0); // starts at 1.0, goes up to 2.5
-  const [comboActive, setComboActive] = useState(false);
   const [currentSetMistake, setCurrentSetMistake] = useState(false);
-  // Track total combos, correct, and wrong answers
-  const [totalCombos, setTotalCombos] = useState(0);
+  // Track total correct and wrong answers
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [totalWrong, setTotalWrong] = useState(0);
+
+  // --- Add state for the combo bonus system ---
+  const [consecutivePerfectSets, setConsecutivePerfectSets] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1.0);
+  const [showComboBonus, setShowComboBonus] = useState(false);
+  const MAX_COMBO_MULTIPLIER = 2.5;
 
   // --- Scoring logic ---
   const BASE_POINTS = 100; // Practice Mode only
@@ -409,6 +340,26 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  // --- Handle logic for when a set is completed ---
+  useEffect(() => {
+    if (isSetComplete) {
+      if (!currentSetMistake) {
+        // Perfect set, increment counter
+        const newCount = consecutivePerfectSets + 1;
+        setConsecutivePerfectSets(newCount);
+
+        if (newCount >= 3) {
+          const newMultiplier = Math.min(MAX_COMBO_MULTIPLIER, 1.0 + (newCount - 2) * 0.5);
+          setComboMultiplier(newMultiplier);
+          setShowComboBonus(true);
+          // Hide the "2.5x" text after a short delay
+          setTimeout(() => setShowComboBonus(false), 2000);
+        }
+      }
+      // If there was a mistake, the counter is reset when the mistake is made.
+    }
+  }, [isSetComplete]);
+
   // --- Core drop logic ---
   const handleItemDrop = useCallback((itemId: string, zoneId: string, event?: any) => {
     if (!itemId || !gameState.isPlaying) return;
@@ -424,27 +375,28 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
     const now = Date.now();
 
-    const speakQuizWord = (item: QuizItem) => {
-      if (!item) return;
-      if (categoryId === 'alphabet') {
-        speakWord(item.name);
-      } else {
-        speakWord(item.name);
-      }
-    };
-
     const advanceSet = () => {
+      console.log('advanceSet called, currentSet:', currentSet, 'shuffledSets.length:', shuffledSets.length);
       setIsSliding(true);
       setTimeout(() => {
         let nextSet = currentSet + 1;
         if (nextSet >= shuffledSets.length) {
+          console.log('Reached end of sets, reshuffling...');
+          // For all categories, reshuffle all items and create new sets
           const allItems = shuffledSets.flat();
-          const reshuffled = shuffleArray(allItems).slice(0, 3);
-          setShuffledSets([reshuffled]);
-          setCurrentSet(0);
-        } else {
-          setCurrentSet(nextSet);
+          const newShuffledSets = shuffleArray(allItems).reduce<any[][]>((acc, item, idx) => {
+            const setIdx = Math.floor(idx / 3);
+            if (!acc[setIdx]) acc[setIdx] = [];
+            acc[setIdx].push(item);
+            return acc;
+          }, []);
+          setShuffledSets(newShuffledSets);
+          nextSet = 0; // Reset to the first set
         }
+        
+        console.log('Moving to next set:', nextSet);
+        setCurrentSet(nextSet);
+        
         setMatchedPairs([]);
         setDraggedItem(null);
         setHoveredZone(null);
@@ -455,8 +407,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     };
 
     if (isCorrect) {
-      const points = BASE_POINTS * comboMultiplier;
-      updateGameState(prev => ({ score: prev.score + points }));
+      const points = Math.round(BASE_POINTS * comboMultiplier);
+      if (gameState.mode !== 'timed') {
+        updateGameState(prev => ({ score: prev.score + points }));
+      }
+      
       // Practice Mode: Add time for correct answer
       if (gameState.mode === 'normal' && timerBarRef.current) {
         timerBarRef.current.addTime(2);
@@ -470,18 +425,31 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       });
       setTotalCorrect(prev => prev + 1);
       playCorrectSound();
-      if (item) setTimeout(() => speakQuizWord(item), 600);
+      if (item) setTimeout(() => speakWord(item.name), 600);
       const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
-      addFloatingScore(points, rect.left + rect.width / 2, rect.top);
+      if (gameState.mode !== 'timed') {
+        addFloatingScore(points, rect.left + rect.width / 2, rect.top);
+      }
     } else {
+      // --- On wrong answer, reset all combo stats ---
+      setConsecutivePerfectSets(0);
+      setComboMultiplier(1.0);
+      setShowComboBonus(false);
+
       setIncorrectDrop(itemId);
       setCurrentSetMistake(true);
+      // Deduct points for wrong answer
+      if (gameState.mode !== 'timed') {
+        updateGameState(prev => ({ score: prev.score - 50 }));
+      }
       // Practice Mode: Subtract time for wrong answer
       if (gameState.mode === 'normal' && timerBarRef.current) {
         timerBarRef.current.subtractTime(3);
       }
       const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
-      addFloatingScore(-50, rect.left + rect.width / 2, rect.top);
+      if (gameState.mode !== 'timed') {
+        addFloatingScore(-50, rect.left + rect.width / 2, rect.top);
+      }
       setTimeout(() => setIncorrectDrop(null), 1000);
       setTotalWrong(prev => prev + 1);
       playWrongSound();
@@ -499,29 +467,21 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   }, [gameState.isPlaying, handleItemDrop]);
 
   // --- Tap-to-drop handler ---
-  const handleZoneTap = useCallback((zoneId: string) => {
+  const handleZoneTap = useCallback((zoneId: string, event: React.MouseEvent) => {
     if (!gameState.isPlaying || !selectedItemId) return;
     // Use the same drop logic
-    handleItemDrop(selectedItemId, zoneId, { currentTarget: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 0, height: 0 }) } });
+    handleItemDrop(selectedItemId, zoneId, event);
     setSelectedItemId(null);
   }, [gameState.isPlaying, selectedItemId, handleItemDrop]);
 
-  // --- Set completion effect: update perfect set streak and combo multiplier ---
+  // --- Reset currentSetMistake on set completion ---
   useEffect(() => {
     if (isSetComplete && gameState.mode !== 'timed') {
-      if (!currentSetMistake) {
-        setComboActive(true);
-        setComboMultiplier(1.5);
-        setTotalCombos(prev => prev + 1);
-        } else {
-        setComboActive(false);
-        setComboMultiplier(1.0);
-      }
       setCurrentSetMistake(false);
     }
-  }, [isSetComplete, currentSetMistake, gameState.mode]);
+  }, [isSetComplete, gameState.mode]);
 
-  // --- Reset perfect set streak on set change ---
+  // --- Reset state on set change ---
   useEffect(() => {
     setMatchedPairs([]);
     setDraggedItem(null);
@@ -539,28 +499,34 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // End game
   const endGame = () => {
-    updateGameState({ isPlaying: false });
-    
-    // Debug log
-    console.log('PATH:', window.location.pathname);
-    console.log('categoryId:', categoryId);
+    // Get the final score before setting isPlaying to false
     const safeCategory = getSafeCategory();
-    console.log('Saving player:', {
-      name: gameState.playerName || 'Guest',
-      score: gameState.mode === 'timed' ? challengeCorrectTotal : gameState.score,
-      mode: gameState.mode,
-      timestamp: Date.now(),
-      category: safeCategory,
-    });
-
-    // Always add the most recent game result to the leaderboard
+    
+    // For Practice mode, use the current gameState.score
+    // For Challenge mode, use the challengeCorrectTotal * 100 to make it consistent with practice mode scoring
+    const finalScore = gameState.mode === 'timed' 
+      ? challengeCorrectTotal * 100  // Each correct answer is worth 100 points in Challenge mode
+      : gameState.score;
+    
+    console.log('Current game state score:', gameState.score);
+    console.log('Challenge correct total:', challengeCorrectTotal);
+    console.log('Final score to be saved:', finalScore);
+    
+    // Create the player object before updating game state
     const newPlayer: Player = {
       name: gameState.playerName || 'Guest',
-      score: gameState.mode === 'timed' ? challengeCorrectTotal : gameState.score,
+      score: finalScore,
       mode: gameState.mode,
       timestamp: Date.now(),
       category: safeCategory,
+      difficulty: (gameState as any).difficulty,
+      speed: (gameState as any).speed,
     };
+    
+    // Now update game state
+    updateGameState({ isPlaying: false });
+    
+    console.log('Adding player to leaderboard:', newPlayer);
     addPlayer(newPlayer);
     setShowLeaderboard(true);
     if (gameState.mode === 'timed') {
@@ -596,16 +562,23 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   // Handle time up
   const handleTimeUp = useCallback(() => {
     if (gameState.isPlaying) {
-      updateGameState({ isPlaying: false });
-      setShowTimeUp(true);
+      if (gameState.mode === 'timed') {
+        // In Challenge mode, directly end the game which will save the score
+        updateGameState({ isPlaying: false });
+        setShowTimeUp(true);
+      } else {
+        // In Practice mode, just show the time up modal
+        updateGameState({ isPlaying: false });
+        setShowTimeUp(true);
+      }
     }
-  }, [gameState.isPlaying, updateGameState]);
+  }, [gameState.isPlaying, gameState.mode, updateGameState]);
 
   // Handle time up modal close
   const handleTimeUpClose = useCallback(() => {
     setShowTimeUp(false);
     endGame();
-  }, []);
+  }, [endGame]);
 
   // Fisher-Yates shuffle algorithm
   function shuffleArray<T>(array: T[]): T[] {
@@ -692,76 +665,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
   }, [isTimeUp, showTimeUp]);
 
-  // DEBUG: Run-once guard for numbers infinite set effect
-  let numbersInfiniteSetRanOnce = false;
-
-  // --- Infinite Loop Logic ---
-  useEffect(() => {
-    if (isSetComplete && (gameState.mode === 'normal' || gameState.mode === 'timed')) {
-      if (categoryId === 'numbers' && numbersInfiniteSetRanOnce) {
-        return;
-      }
-      setTimeout(() => {
-        let pool = [];
-        if (categoryId === 'colors') pool = colorPoolRef.current;
-        else if (categoryId === 'animals') pool = animalPoolRef.current;
-        else if (categoryId === 'alphabet') pool = alphabetData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase() + '-' + i }));
-        else if (categoryId === 'numbers') {
-          // Use numbersData.starter as the pool, just like animals
-          pool = numbersData.starter.map((item, i) => ({
-            ...item,
-            id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i,
-            display: parseInt(item.name, 10).toString() === 'NaN' ? item.name : parseInt(item.name, 10), // show the number as text if possible
-            image: undefined // Remove image so DraggableItem uses display
-          }));
-          pool = pool.filter(item => item.id && item.name);
-          // Split into sets of 3
-          const setSize = 3;
-          const sets = [];
-          for (let i = 0; i < pool.length; i += setSize) {
-            sets.push(pool.slice(i, i + setSize));
-          }
-          if (sets.length > 1 && sets[sets.length - 1].length < setSize) {
-            const last = sets.pop() ?? [];
-            sets[sets.length - 1].push(...last);
-          }
-          // If at the last set, reshuffle and start over
-          if (currentSet + 1 >= sets.length) {
-            const reshuffledSets = shuffleArray(sets.flat()).reduce<any[][]>((acc, item, idx) => {
-              const setIdx = Math.floor(idx / setSize);
-              if (!acc[setIdx]) acc[setIdx] = [];
-              acc[setIdx].push(item);
-              return acc;
-            }, []);
-            setShuffledSets(reshuffledSets);
-            setCurrentSet(0);
-          } else {
-            setCurrentSet(currentSet + 1);
-          }
-          setMatchedPairs([]);
-          setDraggedItem(null);
-          setHoveredZone(null);
-          setIncorrectDrop(null);
-          setCurrentSetMistake(false);
-          return;
-        }
-        else if (categoryId === 'clothes') pool = clothesData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i }));
-        else if (categoryId === 'food') pool = foodData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i }));
-        if (!pool || pool.length === 0) {
-          return; // GUARD: Don't update state if pool is empty
-        }
-        const reshuffled = shuffleArray(pool).slice(0, 3);
-        setShuffledSets([reshuffled]);
-        setCurrentSet(0);
-        setMatchedPairs([]);
-        setDraggedItem(null);
-        setHoveredZone(null);
-        setIncorrectDrop(null);
-        setCurrentSetMistake(false);
-      }, 1200); // Increased delay for feedback in Challenge Mode
-    }
-  }, [isSetComplete, gameState.mode, categoryId, currentSet]);
-
   // Helper: detect mobile (simple check)
   const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
@@ -825,17 +728,21 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
               Correct: {challengeCorrectTotal}
             </div>
           ) : (
-          <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
-            Score {gameState.score.toLocaleString()}
-          </div>
-          )}
-          {/* Combo Indicator */}
-          {comboActive && (
-            <div className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg flex items-center gap-2 animate-pulse border-2 border-white">
-              <span role="img" aria-label="combo">🔥</span> Combo x{comboMultiplier.toFixed(1)}
+            <div className="flex items-center gap-2">
+              <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
+                Score {gameState.score.toLocaleString()}
+              </div>
+              {/* Combo Multiplier indicator */}
+              {(showComboBonus || comboMultiplier > 1.0) && gameState.mode === 'normal' && (
+                <div className="animate-bounce">
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full shadow-lg font-bold text-sm">
+                    {comboMultiplier > 1.0 ? `+${(comboMultiplier - 1.0).toFixed(1)}x` : ''} Bonus!
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          {gameState.mode === 'timed' && (
+          {gameState.mode === 'timed' && gameState.isPlaying && (
             <div className={`px-4 py-2 rounded-full font-semibold flex items-center gap-2 ${
               timeLeft <= 10 ? 'bg-red-100 text-red-800 animate-pulse' : 'bg-yellow-100 text-yellow-800'
             }`}>
@@ -974,7 +881,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  onClick={isMobile ? () => handleZoneTap(item.id) : undefined}
+                  onClick={isMobile ? (zoneId, event) => handleZoneTap(zoneId, event) : undefined}
                   isActive={isMobile && !!selectedItemId}
                 />
               ))}
@@ -1011,7 +918,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         isOpen={showTimeUp}
         onClose={handleTimeUpClose}
         score={gameState.score}
-        combos={totalCombos}
         correct={totalCorrect}
         wrong={totalWrong}
       />

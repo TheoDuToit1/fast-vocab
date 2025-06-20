@@ -35,6 +35,8 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
   onClick,
   isSelected
 }) => {
+  console.log('DraggableItem rendering:', item);
+  
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', item.id);
     onDragStart(item.id);

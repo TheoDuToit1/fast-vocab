@@ -5,12 +5,11 @@ interface TimeUpModalProps {
   isOpen: boolean;
   onClose: () => void;
   score: number;
-  combos: number;
   correct: number;
   wrong: number;
 }
 
-const TimeUpModal: React.FC<TimeUpModalProps> = ({ isOpen, onClose, score, combos, correct, wrong }) => {
+const TimeUpModal: React.FC<TimeUpModalProps> = ({ isOpen, onClose, score, correct, wrong }) => {
   if (!isOpen) return null;
 
   return (
@@ -36,10 +35,6 @@ const TimeUpModal: React.FC<TimeUpModalProps> = ({ isOpen, onClose, score, combo
         <div className="text-6xl font-black text-purple-700 mb-8 animate-pop-in drop-shadow-xl">{score} <span className="text-2xl font-bold text-gray-500 align-super">points</span></div>
         {/* Stats Row */}
         <div className="flex justify-center gap-8 mb-8 animate-fade-in">
-          <div className="flex flex-col items-center">
-            <span className="text-3xl font-extrabold text-pink-500">{combos}</span>
-            <span className="text-sm font-semibold text-pink-600 mt-1">Combos</span>
-          </div>
           <div className="flex flex-col items-center">
             <span className="text-3xl font-extrabold text-green-500">{correct}</span>
             <span className="text-sm font-semibold text-green-600 mt-1">Correct</span>

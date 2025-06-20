@@ -93,7 +93,7 @@ const QuizPage: React.FC = () => {
     <div className="min-h-screen">
       {/* Only render Quiz after name is entered */}
       {!showNameModal && gameState.playerName && (
-      <Quiz onBackToHome={handleBackToHome} />
+      <Quiz key={gameState.gameSessionId} onBackToHome={handleBackToHome} />
       )}
       
       {showGameModeModal && !skipModeModal && (
