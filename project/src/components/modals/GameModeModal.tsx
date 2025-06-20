@@ -220,63 +220,73 @@ const GameModeModal: React.FC<GameModeModalProps> = ({ isOpen, onSelectSettings,
     </div>
   );
 
-  const renderDifficultySelection = () => (
+  // --- Restore Difficulty Selector for Practice/Challenge ---
+  const renderDifficultySelector = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Starter Difficulty */}
+      {/* Starter */}
       <button
         onClick={() => setSelectedDifficulty('starter')}
-        className={`group p-6 border-2 rounded-2xl transition-all duration-200 ${
-          selectedDifficulty === 'starter'
-            ? 'border-green-400 bg-green-50'
-            : 'border-gray-200 hover:border-green-400 hover:bg-green-50'
-        }`}
+        className={`group p-6 border-2 rounded-2xl transition-all duration-200 flex flex-col items-center justify-center ${selectedDifficulty === 'starter' ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-green-50'}`}
       >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors">
-            <Sparkles className="w-6 h-6 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800">Starter</h3>
-            <p className="text-gray-600">Start here</p>
-          </div>
+        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-green-200 transition-colors">
+          <Sparkles className="w-6 h-6 text-green-600" />
         </div>
+        <span className="text-xl font-bold text-gray-800">Starter</span>
+        <span className="text-gray-600 text-sm mt-1">Easy</span>
       </button>
-
-      {/* Mover Difficulty */}
+      {/* Mover (disabled) */}
       <button
         disabled
-        className={`group p-6 border-2 rounded-2xl transition-all duration-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60`}
+        className="group p-6 border-2 rounded-2xl flex flex-col items-center justify-center bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
       >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-            <Sparkles className="w-6 h-6 text-blue-300" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-400">Mover 🔒</h3>
-            <p className="text-gray-400">Balanced challenge</p>
-          </div>
+        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+          <Sparkles className="w-6 h-6 text-blue-300" />
         </div>
+        <span className="text-xl font-bold text-gray-400">Mover</span>
+        <span className="text-gray-400 text-sm mt-1">Medium</span>
       </button>
-
-      {/* Flyer Difficulty */}
+      {/* Flyer (disabled) */}
       <button
         disabled
-        className={`group p-6 border-2 rounded-2xl transition-all duration-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60`}
+        className="group p-6 border-2 rounded-2xl flex flex-col items-center justify-center bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
       >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-            <Sparkles className="w-6 h-6 text-orange-300" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-400">Flyer 🔒</h3>
-            <p className="text-gray-400">Expert level</p>
-          </div>
+        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-2">
+          <Sparkles className="w-6 h-6 text-orange-300" />
         </div>
+        <span className="text-xl font-bold text-gray-400">Flyer</span>
+        <span className="text-gray-400 text-sm mt-1">Hard</span>
       </button>
     </div>
   );
 
   const renderContent = () => {
+    // Step 1: Game speed selection (Practice mode)
+    if (selectedMode === 'normal' && !selectedSpeed) {
+      return (
+        <div className="text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gauge className="w-8 h-8 text-blue-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Select Game Speed</h2>
+          <p className="text-gray-600 mb-6">How fast do you want to play?</p>
+          {renderSpeedSelection()}
+        </div>
+      );
+    }
+    // Step 2: Difficulty selection (Practice mode)
+    if (selectedMode === 'normal' && selectedSpeed && !selectedDifficulty) {
+      return (
+        <div className="text-center">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-8 h-8 text-orange-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Select Difficulty</h2>
+          <p className="text-gray-600 mb-6">Choose your challenge level</p>
+          {renderDifficultySelector()}
+        </div>
+      );
+    }
+
     // Show Ready to Play screen when all required settings are selected
     if ((selectedMode === 'normal' && selectedSpeed && selectedDifficulty) || 
         (selectedMode === 'timed' && selectedDifficulty)) {
@@ -344,41 +354,9 @@ const GameModeModal: React.FC<GameModeModalProps> = ({ isOpen, onSelectSettings,
               <Sparkles className="w-8 h-8 text-orange-600" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-2">Choose Difficulty</h2>
-            <p className="text-gray-600">Select your challenge level</p>
+            <p className="text-gray-600 mb-6">Select your challenge level</p>
+            {renderDifficultySelector()}
           </div>
-          {renderDifficultySelection()}
-        </>
-      );
-    }
-
-    // For Practice mode, show speed selection
-    if (selectedMode === 'normal' && !selectedSpeed) {
-      return (
-        <>
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Gauge className="w-8 h-8 text-blue-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Select Game Speed</h2>
-            <p className="text-gray-600">How fast do you want to play?</p>
-          </div>
-          {renderSpeedSelection()}
-        </>
-      );
-    }
-
-    // For Practice mode, show difficulty selection after speed
-    if (selectedMode === 'normal' && !selectedDifficulty) {
-      return (
-        <>
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-orange-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Choose Difficulty</h2>
-            <p className="text-gray-600">Select your challenge level</p>
-          </div>
-          {renderDifficultySelection()}
         </>
       );
     }

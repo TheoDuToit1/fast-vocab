@@ -69,15 +69,65 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   // Add local state for all shuffled sets
   const [shuffledSets, setShuffledSets] = useState<any[][]>([]);
 
+  // At the top of the component, after useState declarations:
+  const colorPoolRef = useRef<any[]>([]);
+
   // Build and shuffle all sets/items ONCE per game session
   useEffect(() => {
     // Build items array as before
     let items: any[] = [];
-  if (categoryId === 'alphabet') {
+    if (categoryId === 'alphabet') {
       items = alphabetData.starter.map(item => ({ ...item, category: '', hex: undefined, image: item.image }));
-  } else if (categoryId === 'colors') {
-      const normalizeColor = (item: any) => ({ ...item, category: '', image: item.image ?? undefined, hex: item.hex ?? undefined });
-      items = flyerColors.map(normalizeColor); // Use all for Practice Mode
+    } else if (categoryId === 'colors') {
+      const difficulty = (gameState as any).difficulty || 'starter';
+      // Define color sets
+      const starterColors = [
+        { name: 'Red', hex: '#FF0000' },
+        { name: 'Blue', hex: '#0000FF' },
+        { name: 'Yellow', hex: '#FFFF00' },
+        { name: 'Green', hex: '#008000' },
+        { name: 'Orange', hex: '#FFA500' },
+        { name: 'Purple', hex: '#800080' },
+        { name: 'Pink', hex: '#FFC0CB' },
+        { name: 'Brown', hex: '#A52A2A' },
+        { name: 'Black', hex: '#000000' },
+        { name: 'White', hex: '#FFFFFF' },
+      ];
+      const moverColors = [
+        { name: 'Gray', hex: '#808080' },
+        { name: 'Cyan', hex: '#00FFFF' },
+        { name: 'Magenta', hex: '#FF00FF' },
+        { name: 'Lime', hex: '#00FF00' },
+        { name: 'Navy', hex: '#000080' },
+        { name: 'Teal', hex: '#008080' },
+        { name: 'Maroon', hex: '#800000' },
+        { name: 'Olive', hex: '#808000' },
+        { name: 'Gold', hex: '#FFD700' },
+        { name: 'Silver', hex: '#C0C0C0' },
+      ];
+      const flyerColors = [
+        { name: 'Violet', hex: '#EE82EE' },
+        { name: 'Indigo', hex: '#4B0082' },
+        { name: 'Coral', hex: '#FF7F50' },
+        { name: 'Turquoise', hex: '#40E0D0' },
+        { name: 'Beige', hex: '#F5F5DC' },
+        { name: 'Peach', hex: '#FFDAB9' },
+        { name: 'Mint', hex: '#98FF98' },
+        { name: 'Lavender', hex: '#E6E6FA' },
+        { name: 'Aqua', hex: '#00FFFF' },
+        { name: 'Chocolate', hex: '#D2691E' },
+      ];
+      let colorPool = [];
+      if (difficulty === 'starter') {
+        colorPool = starterColors;
+      } else if (difficulty === 'mover') {
+        colorPool = [...starterColors, ...moverColors];
+      } else {
+        colorPool = [...starterColors, ...moverColors, ...flyerColors];
+      }
+      colorPool = colorPool.map(c => ({ ...c, id: c.name.toLowerCase(), name: c.name, image: c.hex, category: '' }));
+      colorPoolRef.current = colorPool;
+      items = colorPool;
     } else if (categoryId === 'numbers') {
       const nums = generateRandomNumbers(27, 1); // Use 1-digit numbers for demo
       items = nums.map(n => {
@@ -164,17 +214,67 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     } else {
       // fallback
       items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
-  }
-  // Split into sets of 3
+    }
+    // For colors, use a pool of 10/20/30, but sets of 3
+    let setSize = 3;
+    let colorPool: any[] = [];
+    if (categoryId === 'colors') {
+      const difficulty = (gameState as any).difficulty || 'starter';
+      const starterColors = [
+        { name: 'Red', hex: '#FF0000' },
+        { name: 'Blue', hex: '#0000FF' },
+        { name: 'Yellow', hex: '#FFFF00' },
+        { name: 'Green', hex: '#008000' },
+        { name: 'Orange', hex: '#FFA500' },
+        { name: 'Purple', hex: '#800080' },
+        { name: 'Pink', hex: '#FFC0CB' },
+        { name: 'Brown', hex: '#A52A2A' },
+        { name: 'Black', hex: '#000000' },
+        { name: 'White', hex: '#FFFFFF' },
+      ];
+      const moverColors = [
+        { name: 'Gray', hex: '#808080' },
+        { name: 'Cyan', hex: '#00FFFF' },
+        { name: 'Magenta', hex: '#FF00FF' },
+        { name: 'Lime', hex: '#00FF00' },
+        { name: 'Navy', hex: '#000080' },
+        { name: 'Teal', hex: '#008080' },
+        { name: 'Maroon', hex: '#800000' },
+        { name: 'Olive', hex: '#808000' },
+        { name: 'Gold', hex: '#FFD700' },
+        { name: 'Silver', hex: '#C0C0C0' },
+      ];
+      const flyerColors = [
+        { name: 'Violet', hex: '#EE82EE' },
+        { name: 'Indigo', hex: '#4B0082' },
+        { name: 'Coral', hex: '#FF7F50' },
+        { name: 'Turquoise', hex: '#40E0D0' },
+        { name: 'Beige', hex: '#F5F5DC' },
+        { name: 'Peach', hex: '#FFDAB9' },
+        { name: 'Mint', hex: '#98FF98' },
+        { name: 'Lavender', hex: '#E6E6FA' },
+        { name: 'Aqua', hex: '#00FFFF' },
+        { name: 'Chocolate', hex: '#D2691E' },
+      ];
+      if (difficulty === 'starter') {
+        colorPool = starterColors;
+      } else if (difficulty === 'mover') {
+        colorPool = [...starterColors, ...moverColors];
+      } else {
+        colorPool = [...starterColors, ...moverColors, ...flyerColors];
+      }
+      colorPool = colorPool.map(c => ({ ...c, id: c.name.toLowerCase(), name: c.name, image: c.hex, category: '' }));
+      items = colorPool;
+    }
+    // Split into sets of 3
     const sets = [];
-    for (let i = 0; i < items.length; i += 3) {
-      sets.push(items.slice(i, i + 3));
-  }
-    if (sets.length > 1 && sets[sets.length - 1].length < 3) {
+    for (let i = 0; i < items.length; i += setSize) {
+      sets.push(items.slice(i, i + setSize));
+    }
+    if (sets.length > 1 && sets[sets.length - 1].length < setSize) {
       const last = sets.pop() ?? [];
       sets[sets.length - 1].push(...last);
-  }
-    // Shuffle each set ONCE
+    }
     setShuffledSets(sets.map(set => shuffleArray(set)));
   }, [categoryId, gameState.mode, gameState.gameSessionId, (gameState as any).difficulty]);
 
@@ -426,6 +526,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   const speakWord = (word: string) => {
     if (!audioEnabled) return;
+    window.speechSynthesis.cancel(); // Stop any current speech
     const utterance = new window.SpeechSynthesisUtterance(word);
     if (vnVoice) {
       utterance.voice = vnVoice;
@@ -475,9 +576,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     return pair ? (currentItems.find(item => item.id === pair.itemId) || null) : null;
   }, [matchedPairs, currentItems]);
 
-  // Advance to next set when current set is complete
+  // Fix: Only advance set for non-colors categories
   useEffect(() => {
-    if (isSetComplete && currentSet < shuffledSets.length - 1) {
+    if (categoryId !== 'colors' && isSetComplete && currentSet < shuffledSets.length - 1) {
       setTimeout(() => {
         setCurrentSet(currentSet + 1);
         setMatchedPairs([]);
@@ -487,7 +588,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         setCurrentSetMistake(false);
       }, 1000); // 1 second delay for feedback
     }
-  }, [isSetComplete, currentSet, shuffledSets.length]);
+  }, [isSetComplete, currentSet, shuffledSets.length, categoryId]);
 
   // Add state for challenge mode stats
   const [challengeCorrectTotal, setChallengeCorrectTotal] = useState(0);
@@ -566,6 +667,37 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       }
     }
   }, [isTimeUp, showTimeUp]);
+
+  // --- Infinite Loop Logic ---
+  // When a set is completed, reshuffle and continue
+  useEffect(() => {
+    if (isSetComplete && (gameState.mode === 'normal' || gameState.mode === 'timed')) {
+      setTimeout(() => {
+        if (categoryId === 'colors') {
+          // Pick a new random set of 3 from the color pool
+          const pool = colorPoolRef.current;
+          const reshuffled = shuffleArray(pool).slice(0, 3);
+          setShuffledSets([reshuffled]);
+          setCurrentSet(0);
+          setMatchedPairs([]);
+          setDraggedItem(null);
+          setHoveredZone(null);
+          setIncorrectDrop(null);
+          setCurrentSetMistake(false);
+        } else {
+          // Default: repeat reshuffled set of 3
+          const reshuffled = shuffleArray(currentItems);
+          setShuffledSets([reshuffled]);
+          setCurrentSet(0);
+          setMatchedPairs([]);
+          setDraggedItem(null);
+          setHoveredZone(null);
+          setIncorrectDrop(null);
+          setCurrentSetMistake(false);
+        }
+      }, 500); // Short delay for feedback
+    }
+  }, [isSetComplete, gameState.mode]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
@@ -727,29 +859,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             </div>
           </div>
 
-          {/* Mode Indicator */}
-          {gameState.mode === 'normal' && (
-            <div className="flex justify-center gap-4 mb-8">
-              <button
-                onClick={() => updateGameState({ difficulty: 'starter' })}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${((gameState as any).difficulty || 'starter') === 'starter' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-green-100'}`}
-              >
-                Starter
-              </button>
-              <button
-                disabled
-                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
-              >
-                Mover 🔒
-              </button>
-              <button
-                disabled
-                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
-              >
-                Flyer 🔒
-              </button>
-            </div>
-          )}
+          {/* Mode Indicator only (no difficulty buttons) */}
 
           {/* Animals Row */}
             <div className="flex flex-wrap justify-center gap-8 mt-6">

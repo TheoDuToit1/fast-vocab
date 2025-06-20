@@ -23,6 +23,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   const [difficulty, setDifficulty] = useState<'starter' | 'mover' | 'flyer'>('starter');
   const [animDirection, setAnimDirection] = useState<'left' | 'right' | null>(null);
   const [showDifficultyModal, setShowDifficultyModal] = useState(true);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Voice selection logic (match Quiz exactly)
   useEffect(() => {
@@ -57,12 +58,49 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   if (category === 'alphabet') {
     allItems = alphabetData.starter;
   } else if (category === 'colors') {
-    if (difficulty === 'flyer') {
-      allItems = colorsData.flyer;
+    // Define color sets
+    const starterColors = [
+      { name: 'Red', image: '#FF0000' },
+      { name: 'Blue', image: '#0000FF' },
+      { name: 'Yellow', image: '#FFFF00' },
+      { name: 'Green', image: '#008000' },
+      { name: 'Orange', image: '#FFA500' },
+      { name: 'Purple', image: '#800080' },
+      { name: 'Pink', image: '#FFC0CB' },
+      { name: 'Brown', image: '#A52A2A' },
+      { name: 'Black', image: '#000000' },
+      { name: 'White', image: '#FFFFFF' },
+    ];
+    const moverColors = [
+      { name: 'Gray', image: '#808080' },
+      { name: 'Cyan', image: '#00FFFF' },
+      { name: 'Magenta', image: '#FF00FF' },
+      { name: 'Lime', image: '#00FF00' },
+      { name: 'Navy', image: '#000080' },
+      { name: 'Teal', image: '#008080' },
+      { name: 'Maroon', image: '#800000' },
+      { name: 'Olive', image: '#808000' },
+      { name: 'Gold', image: '#FFD700' },
+      { name: 'Silver', image: '#C0C0C0' },
+    ];
+    const flyerColors = [
+      { name: 'Violet', image: '#EE82EE' },
+      { name: 'Indigo', image: '#4B0082' },
+      { name: 'Coral', image: '#FF7F50' },
+      { name: 'Turquoise', image: '#40E0D0' },
+      { name: 'Beige', image: '#F5F5DC' },
+      { name: 'Peach', image: '#FFDAB9' },
+      { name: 'Mint', image: '#98FF98' },
+      { name: 'Lavender', image: '#E6E6FA' },
+      { name: 'Aqua', image: '#00FFFF' },
+      { name: 'Chocolate', image: '#D2691E' },
+    ];
+    if (difficulty === 'starter') {
+      allItems = starterColors;
     } else if (difficulty === 'mover') {
-      allItems = colorsData.mover;
+      allItems = [...starterColors, ...moverColors];
     } else {
-      allItems = colorsData.starter;
+      allItems = [...starterColors, ...moverColors, ...flyerColors];
     }
   } else if (category === 'numbers') {
     let digits = 2;
@@ -241,6 +279,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                     onClick={() => {
                       if (!audioEnabled) return;
                       if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel(); // Stop any current speech
                         const utterance = new window.SpeechSynthesisUtterance(currentItem.name);
                         if (voice) {
                           utterance.voice = voice;
@@ -261,7 +300,13 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                     {category === 'numbers' ? currentItem.word : currentItem.name}
                   </div>
                 </div>
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
+                  onClick={() => setShowImageModal(true)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Enlarge image"
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowImageModal(true); }}
+                >
                   <Eye className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -406,6 +451,31 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 Flyer 🔒
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showImageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowImageModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl p-8 relative max-w-lg w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            {category === 'colors' ? (
+              <div className="w-72 h-72 rounded-full border-4 border-gray-200 mb-6" style={{ background: currentItem.image }} />
+            ) : category === 'numbers' ? (
+              <div className="flex flex-col items-center justify-center w-72 h-72 mb-6">
+                <span className="text-8xl font-extrabold select-none" style={{ color: currentItem.hex || '#6366f1', fontFamily: 'Comic Sans MS, Comic Neue, cursive, Inter, sans-serif' }}>{currentItem.display}</span>
+                <span className="text-2xl font-medium text-gray-600 mt-4">{currentItem.word}</span>
+              </div>
+            ) : (
+              <img src={currentItem.image} alt={currentItem.name} className="w-72 h-72 object-cover rounded-2xl mb-6" />
+            )}
+            <div className="text-3xl font-bold text-gray-700 text-center">{category === 'numbers' ? currentItem.word : currentItem.name}</div>
           </div>
         </div>
       )}
