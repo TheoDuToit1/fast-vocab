@@ -29,8 +29,9 @@ export interface Player {
   mode: GameMode;
   timestamp: number;
   category: string;
-  difficulty?: string;
+  difficulty: string;
   speed?: string;
+  gameSessionId?: number;
 }
 
 export type GameMode = 'study' | 'normal' | 'timed';

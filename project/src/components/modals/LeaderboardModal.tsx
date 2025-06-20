@@ -8,9 +8,10 @@ interface LeaderboardModalProps {
   onBackToCategories: () => void;
   players: Player[];
   clearLeaderboard: () => void;
+  isGameFinished: boolean;
 }
 
-const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, onBackToCategories, players, clearLeaderboard }) => {
+const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, onBackToCategories, players, clearLeaderboard, isGameFinished }) => {
   if (!isOpen) return null;
 
   // Tab state: 'all', 'normal' (Practice), or 'timed' (Challenge)
@@ -81,9 +82,9 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, on
             <h2 className="text-4xl font-extrabold text-white drop-shadow-lg tracking-tight">Leaderboard</h2>
           </div>
           <button
-            onClick={onBackToCategories}
+            onClick={isGameFinished ? onBackToCategories : onClose}
             className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center hover:bg-white/60 transition-colors shadow-lg"
-            title="Back to Categories"
+            title={isGameFinished ? "Back to Categories" : "Close"}
           >
             <X className="w-7 h-7 text-white" />
           </button>

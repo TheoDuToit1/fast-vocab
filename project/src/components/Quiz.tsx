@@ -44,6 +44,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   // Timer for timed mode
   const { timeLeft, resetTimer, isTimeUp } = useGameTimer(60, gameState.isPlaying && gameState.mode === 'timed' && !gameState.isPaused);
 
+  // --- Add state to track if game is finished ---
+  const [isGameFinished, setIsGameFinished] = useState(false);
+
   // --- Move timerBarRef above handleDrop to fix linter error ---
   const timerBarRef = useRef<TimerBarHandle>(null);
 
@@ -226,6 +229,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   }, [categoryId, gameState.mode, gameState.gameSessionId]);
 
   const [currentSet, setCurrentSet] = useState(0);
+  const [practiceSetNumber, setPracticeSetNumber] = useState(1);
   const currentItems = shuffledSets[currentSet] || [];
   const currentItemsRef = useRef<any[]>(currentItems);
   currentItemsRef.current = currentItems; // Always update on render
@@ -360,6 +364,23 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
   }, [isSetComplete]);
 
+  // --- Save score after each set in practice mode ---
+  useEffect(() => {
+    if (isSetComplete && gameState.mode === 'normal') {
+      const safeCategory = getSafeCategory();
+      addPlayer({
+        name: gameState.playerName || 'Guest',
+        score: gameState.score,
+        mode: gameState.mode,
+        timestamp: Date.now(),
+        category: safeCategory,
+        difficulty: (gameState as any).difficulty,
+        speed: (gameState as any).speed,
+        gameSessionId: gameState.gameSessionId,
+      });
+    }
+  }, [isSetComplete, gameState, addPlayer, getSafeCategory]);
+
   // --- Core drop logic ---
   const handleItemDrop = useCallback((itemId: string, zoneId: string, event?: any) => {
     if (!itemId || !gameState.isPlaying) return;
@@ -379,8 +400,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       console.log('advanceSet called, currentSet:', currentSet, 'shuffledSets.length:', shuffledSets.length);
       setIsSliding(true);
       setTimeout(() => {
+        setPracticeSetNumber(prev => prev + 1);
         let nextSet = currentSet + 1;
-        if (nextSet >= shuffledSets.length) {
+        if (nextSet >= shuffledSets.length && shuffledSets.length > 0) {
           console.log('Reached end of sets, reshuffling...');
           // For all categories, reshuffle all items and create new sets
           const allItems = shuffledSets.flat();
@@ -521,11 +543,15 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       category: safeCategory,
       difficulty: (gameState as any).difficulty,
       speed: (gameState as any).speed,
+      gameSessionId: gameState.gameSessionId,
     };
     
     // Now update game state
     updateGameState({ isPlaying: false });
     
+    // Mark game as finished
+    setIsGameFinished(true);
+
     console.log('Adding player to leaderboard:', newPlayer);
     addPlayer(newPlayer);
     setShowLeaderboard(true);
@@ -621,10 +647,10 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   useEffect(() => {
     if (gameState.mode === 'timed' && isSetComplete) {
-      setChallengeSetsCompleted(currentSet + 1);
+      setChallengeSetsCompleted(prev => prev + 1);
       setChallengeCorrectTotal(prev => prev + matchedPairs.length);
     }
-  }, [isSetComplete, gameState.mode, currentSet, matchedPairs.length]);
+  }, [isSetComplete, gameState.mode, matchedPairs.length]);
 
   // Track TimerBar percent for practice mode
   const [timerBarPercent, setTimerBarPercent] = useState(100);
@@ -720,7 +746,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             {gameState.mode === 'timed' ? (
               <>Sets: {challengeSetsCompleted}</>
             ) : (
-              <>Set {currentSet + 1}</>
+              <>Set {practiceSetNumber}</>
             )}
           </div>
           {gameState.mode === 'timed' ? (
@@ -907,6 +933,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         onBackToCategories={onBackToHome}
         players={players}
         clearLeaderboard={clearLeaderboard}
+        isGameFinished={isGameFinished}
       />
 
       <HelpModal

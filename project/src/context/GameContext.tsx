@@ -90,8 +90,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const addPlayer = (player: Player) => {
     setPlayers(prev => {
+      // If player has a session ID, try to find and update
+      if (player.gameSessionId) {
+        const existingPlayerIndex = prev.findIndex(p => p.gameSessionId === player.gameSessionId);
+
+        if (existingPlayerIndex > -1) {
+          const updatedPlayers = [...prev];
+          // Update the score, but keep the original timestamp to maintain its position on the leaderboard unless the new score is higher
+          updatedPlayers[existingPlayerIndex] = {
+            ...prev[existingPlayerIndex],
+            ...player,
+            timestamp: prev[existingPlayerIndex].timestamp,
+          };
+          console.log('[addPlayer] Updating player score:', updatedPlayers);
+          return updatedPlayers;
+        }
+      }
+      
+      // Otherwise, add as new player
       const updated = [...prev, player];
-      console.log('[addPlayer] Saving players:', updated);
+      console.log('[addPlayer] Saving new player:', updated);
       return updated;
     });
   };
