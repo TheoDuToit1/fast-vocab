@@ -22,13 +22,25 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [difficulty, setDifficulty] = useState<'starter' | 'mover' | 'flyer'>('starter');
   const [animDirection, setAnimDirection] = useState<'left' | 'right' | null>(null);
+  const [showDifficultyModal, setShowDifficultyModal] = useState(true);
 
   // Voice selection logic (match Quiz exactly)
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
-      const viVoice = availableVoices.find(v => v.lang.startsWith('vi')) || null;
-      setVoice(viVoice);
+      const preferredNames = [
+        'Google US English',
+        'Microsoft Zira Desktop - English (United States)',
+        'Samantha'
+      ];
+      let enVoice = availableVoices.find(v => preferredNames.includes(v.name));
+      if (!enVoice) {
+        enVoice = availableVoices.find(v => v.lang.startsWith('en') && v.gender === 'female');
+      }
+      if (!enVoice) {
+        enVoice = availableVoices.find(v => v.lang.startsWith('en'));
+      }
+      setVoice(enVoice || null);
     };
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -182,30 +194,6 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
       <div className="max-w-4xl mx-auto px-6">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
           
-          {/* Difficulty Selectors - only for animals */}
-          {category !== 'alphabet' && (
-            <div className="flex justify-center gap-4 mb-8">
-              <button
-                onClick={() => { setDifficulty('starter'); setCurrentItemIndex(0); }}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${difficulty === 'starter' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-green-100'}`}
-              >
-                Starter
-              </button>
-              <button
-                disabled
-                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
-              >
-                Mover 🔒
-              </button>
-              <button
-                disabled
-                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
-              >
-                Flyer 🔒
-              </button>
-            </div>
-          )}
-
           {/* Current Item Display */}
           {currentItem && (
             <div className="text-center mb-12 flex items-center justify-center gap-4">
@@ -373,8 +361,54 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Change Difficulty Button */}
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setShowDifficultyModal(true)}
+              className="px-6 py-2 rounded-full font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition-colors shadow"
+            >
+              Change Difficulty
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Difficulty Modal */}
+      {showDifficultyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-2xl p-8 shadow-xl w-full max-w-md relative">
+            <button
+              onClick={() => setShowDifficultyModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="text-2xl font-bold text-center mb-6 text-green-700">Select Difficulty</h2>
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={() => { setDifficulty('starter'); setCurrentItemIndex(0); setShowDifficultyModal(false); }}
+                className={`px-6 py-3 rounded-xl font-semibold transition-colors ${difficulty === 'starter' ? 'bg-green-500 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+              >
+                Starter
+              </button>
+              <button
+                disabled
+                className="px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+              >
+                Mover 🔒
+              </button>
+              <button
+                disabled
+                className="px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+              >
+                Flyer 🔒
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

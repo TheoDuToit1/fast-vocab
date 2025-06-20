@@ -409,8 +409,16 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
-      const viVoice = availableVoices.find(v => v.lang.startsWith('vi')) || null;
-      setVnVoice(viVoice);
+      const preferredNames = [
+        'Google US English',
+        'Microsoft Zira Desktop - English (United States)',
+        'Samantha'
+      ];
+      let enVoice = availableVoices.find(v => preferredNames.includes(v.name));
+      if (!enVoice) {
+        enVoice = availableVoices.find(v => v.lang.startsWith('en'));
+      }
+      setVnVoice(enVoice || null);
     };
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
