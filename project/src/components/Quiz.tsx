@@ -373,6 +373,37 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   // --- Scoring logic ---
   const BASE_POINTS = 10; // Practice Mode only
 
+  // --- Tap-to-match state for mobile ---
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Play correct sound
+  const playCorrectSound = useCallback(() => {
+    if (audioEnabled && correctAudioRef.current) {
+      correctAudioRef.current.currentTime = 0;
+      correctAudioRef.current.volume = 0.4;
+      correctAudioRef.current.play();
+    }
+  }, [audioEnabled]);
+  // Play wrong sound
+  const playWrongSound = useCallback(() => {
+    if (audioEnabled && wrongAudioRef.current) {
+      wrongAudioRef.current.currentTime = 0;
+      wrongAudioRef.current.volume = 0.4;
+      wrongAudioRef.current.play();
+    }
+  }, [audioEnabled]);
+  // Speak word function (move above handleItemDrop)
+  const speakWord = (word: string) => {
+    if (!audioEnabled) return;
+    window.speechSynthesis.cancel(); // Stop any current speech
+    const utterance = new window.SpeechSynthesisUtterance(word);
+    if (vnVoice) {
+      utterance.voice = vnVoice;
+      utterance.lang = vnVoice.lang;
+    }
+    window.speechSynthesis.speak(utterance);
+  };
+
   // --- Core drop logic ---
   const handleItemDrop = useCallback((itemId: string, zoneId: string, event: any) => {
     if (!itemId || !gameState.isPlaying) return;
@@ -543,17 +574,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }, []);
 
-  const speakWord = (word: string) => {
-    if (!audioEnabled) return;
-    window.speechSynthesis.cancel(); // Stop any current speech
-    const utterance = new window.SpeechSynthesisUtterance(word);
-    if (vnVoice) {
-      utterance.voice = vnVoice;
-      utterance.lang = vnVoice.lang;
-    }
-    window.speechSynthesis.speak(utterance);
-  };
-
   // Handle time up
   const handleTimeUp = useCallback(() => {
     if (gameState.isPlaying) {
@@ -613,23 +633,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       setChallengeCorrectTotal(prev => prev + matchedPairs.length);
     }
   }, [isSetComplete, gameState.mode, currentSet, matchedPairs.length]);
-
-  // Play correct sound
-  const playCorrectSound = useCallback(() => {
-    if (audioEnabled && correctAudioRef.current) {
-      correctAudioRef.current.currentTime = 0;
-      correctAudioRef.current.volume = 0.4;
-      correctAudioRef.current.play();
-    }
-  }, [audioEnabled]);
-  // Play wrong sound
-  const playWrongSound = useCallback(() => {
-    if (audioEnabled && wrongAudioRef.current) {
-      wrongAudioRef.current.currentTime = 0;
-      wrongAudioRef.current.volume = 0.4;
-      wrongAudioRef.current.play();
-    }
-  }, [audioEnabled]);
 
   // Track TimerBar percent for practice mode
   const [timerBarPercent, setTimerBarPercent] = useState(100);
@@ -745,9 +748,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       }, 500); // Short delay for feedback
     }
   }, [isSetComplete, gameState.mode, categoryId, currentSet]);
-
-  // --- Tap-to-match state for mobile ---
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   // Helper: detect mobile (simple check)
   const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
