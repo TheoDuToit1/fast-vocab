@@ -244,40 +244,32 @@ const GameModeModal: React.FC<GameModeModalProps> = ({ isOpen, onSelectSettings,
 
       {/* Mover Difficulty */}
       <button
-        onClick={() => setSelectedDifficulty('mover')}
-        className={`group p-6 border-2 rounded-2xl transition-all duration-200 ${
-          selectedDifficulty === 'mover'
-            ? 'border-blue-400 bg-blue-50'
-            : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50'
-        }`}
+        disabled
+        className={`group p-6 border-2 rounded-2xl transition-all duration-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60`}
       >
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-            <Sparkles className="w-6 h-6 text-blue-600" />
+            <Sparkles className="w-6 h-6 text-blue-300" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-800">Mover</h3>
-            <p className="text-gray-600">Balanced challenge</p>
+            <h3 className="text-xl font-bold text-gray-400">Mover 🔒</h3>
+            <p className="text-gray-400">Balanced challenge</p>
           </div>
         </div>
       </button>
 
       {/* Flyer Difficulty */}
       <button
-        onClick={() => setSelectedDifficulty('flyer')}
-        className={`group p-6 border-2 rounded-2xl transition-all duration-200 ${
-          selectedDifficulty === 'flyer'
-            ? 'border-orange-400 bg-orange-50'
-            : 'border-gray-200 hover:border-orange-400 hover:bg-orange-50'
-        }`}
+        disabled
+        className={`group p-6 border-2 rounded-2xl transition-all duration-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60`}
       >
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-            <Sparkles className="w-6 h-6 text-orange-600" />
+            <Sparkles className="w-6 h-6 text-orange-300" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-800">Flyer</h3>
-            <p className="text-gray-600">Expert level</p>
+            <h3 className="text-xl font-bold text-gray-400">Flyer 🔒</h3>
+            <p className="text-gray-400">Expert level</p>
           </div>
         </div>
       </button>

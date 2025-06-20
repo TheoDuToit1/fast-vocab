@@ -85,15 +85,23 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
     } else {
       allItems = foodData.starter;
     }
-  } else {
-    // Animals logic
+  } else if (category === 'animals') {
+    const animalMap = (imgPath: string) => {
+      const fileName = imgPath.split('/').pop() || '';
+      const base = fileName.replace(/\.[^/.]+$/, '');
+      let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      return { name: displayName, image: imgPath };
+    };
     if (difficulty === 'flyer') {
-      allItems = animalsData.flyer;
+      allItems = animalsData.flyer.map(animalMap);
     } else if (difficulty === 'mover') {
-      allItems = animalsData.mover;
+      allItems = animalsData.mover.map(animalMap);
     } else {
-      allItems = animalsData.starter;
+      allItems = animalsData.starter.map(animalMap);
     }
+  } else {
+    // Default fallback
+    allItems = [];
   }
   const currentItem = allItems[currentItemIndex];
 
@@ -184,16 +192,16 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 Starter
               </button>
               <button
-                onClick={() => { setDifficulty('mover'); setCurrentItemIndex(0); }}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${difficulty === 'mover' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-blue-100'}`}
+                disabled
+                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
               >
-                Mover
+                Mover 🔒
               </button>
               <button
-                onClick={() => { setDifficulty('flyer'); setCurrentItemIndex(0); }}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${difficulty === 'flyer' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-orange-100'}`}
+                disabled
+                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
               >
-                Flyer
+                Flyer 🔒
               </button>
             </div>
           )}
@@ -220,7 +228,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                   {category === 'colors' ? (
                     <div
                       className="w-48 h-48 rounded-full border-4 border-gray-200 mx-auto"
-                      style={{ background: currentItem.hex }}
+                      style={{ background: currentItem.image }}
                     />
                   ) : category === 'numbers' ? (
                     <div className="flex flex-col items-center justify-center w-full h-full">

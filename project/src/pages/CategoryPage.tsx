@@ -25,7 +25,7 @@ const categories = [
   categoriesData.numbers,
   categoriesData.clothes,
   categoriesData.food,
-];
+].filter(category => category.id !== 'food' && category.id !== 'clothes');
 
 const CategoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -188,14 +188,20 @@ const CategoryPage: React.FC = () => {
         {/* Coming Soon Categories */}
         <div className="mt-16">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Coming Soon</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {['Geography', 'Science', 'Music'].map((name, index) => (
-              <div key={name} className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 text-center border-2 border-dashed border-gray-300">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🔒</span>
+          <div className="flex flex-wrap justify-center gap-6">
+            {[categoriesData.clothes, categoriesData.food].map((category) => (
+              <div key={category.id} className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 text-center border-2 border-dashed border-gray-300 flex flex-col items-center w-80">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 relative flex items-center justify-center bg-gray-100">
+                  <img src={category.image} alt={category.name} className="w-full h-full object-cover opacity-60" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl bg-white/80 rounded-full p-2"><span role='img' aria-label='locked'>🔒</span></span>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-600 mb-2">{name}</h3>
-                <p className="text-gray-500">New category coming soon!</p>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-2xl">{category.icon}</span>
+                  <h3 className="text-xl font-bold text-gray-600">{category.name}</h3>
+                </div>
+                <p className="text-gray-500">This category is coming soon!</p>
               </div>
             ))}
           </div>

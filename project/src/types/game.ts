@@ -55,4 +55,5 @@ export interface GameState {
   playerName: string;
   category: string;
   gameSessionId?: number;
+  difficulty?: GameDifficulty;
 }

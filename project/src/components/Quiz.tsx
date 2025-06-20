@@ -73,9 +73,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   useEffect(() => {
     // Build items array as before
     let items: any[] = [];
-    if (categoryId === 'alphabet') {
+  if (categoryId === 'alphabet') {
       items = alphabetData.starter.map(item => ({ ...item, category: '', hex: undefined, image: item.image }));
-    } else if (categoryId === 'colors') {
+  } else if (categoryId === 'colors') {
       const normalizeColor = (item: any) => ({ ...item, category: '', image: item.image ?? undefined, hex: item.hex ?? undefined });
       items = flyerColors.map(normalizeColor); // Use all for Practice Mode
     } else if (categoryId === 'numbers') {
@@ -146,7 +146,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       const normalizeFood = (item: { name: string, image: string }) => ({
         ...item,
         id: item.name.toLowerCase().replace(/\s+/g, '-'),
-        category: '',
+          category: '',
         hex: undefined,
       });
 
@@ -164,16 +164,16 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     } else {
       // fallback
       items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
-    }
-    // Split into sets of 3
+  }
+  // Split into sets of 3
     const sets = [];
     for (let i = 0; i < items.length; i += 3) {
       sets.push(items.slice(i, i + 3));
-    }
+  }
     if (sets.length > 1 && sets[sets.length - 1].length < 3) {
       const last = sets.pop() ?? [];
       sets[sets.length - 1].push(...last);
-    }
+  }
     // Shuffle each set ONCE
     setShuffledSets(sets.map(set => shuffleArray(set)));
   }, [categoryId, gameState.mode, gameState.gameSessionId, (gameState as any).difficulty]);
@@ -344,7 +344,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         setComboActive(true);
         setComboMultiplier(1.5);
         setTotalCombos(prev => prev + 1);
-      } else {
+        } else {
         setComboActive(false);
         setComboMultiplier(1.0);
       }
@@ -718,6 +718,30 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
               {gameState.mode === 'timed' ? 'Challenge Mode' : 'Practice Mode'}
             </div>
           </div>
+
+          {/* Mode Indicator */}
+          {gameState.mode === 'normal' && (
+            <div className="flex justify-center gap-4 mb-8">
+              <button
+                onClick={() => updateGameState({ difficulty: 'starter' })}
+                className={`px-6 py-2 rounded-full font-semibold transition-colors ${((gameState as any).difficulty || 'starter') === 'starter' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-green-100'}`}
+              >
+                Starter
+              </button>
+              <button
+                disabled
+                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
+              >
+                Mover 🔒
+              </button>
+              <button
+                disabled
+                className={`px-6 py-2 rounded-full font-semibold transition-colors bg-gray-200 text-gray-400 cursor-not-allowed opacity-60`}
+              >
+                Flyer 🔒
+              </button>
+            </div>
+          )}
 
           {/* Animals Row */}
             <div className="flex flex-wrap justify-center gap-8 mt-6">
