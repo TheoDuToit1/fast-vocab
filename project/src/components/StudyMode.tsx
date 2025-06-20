@@ -24,6 +24,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   const [animDirection, setAnimDirection] = useState<'left' | 'right' | null>(null);
   const [showDifficultyModal, setShowDifficultyModal] = useState(true);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [isFading, setIsFading] = useState(false);
 
   // Voice selection logic (match Quiz exactly)
   useEffect(() => {
@@ -156,22 +157,26 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   const currentItem = allItems[currentItemIndex];
 
   const nextItem = () => {
-    if (currentItemIndex < allItems.length - 1) {
+    if (currentItemIndex < allItems.length - 1 && !isFading) {
       setAnimDirection('right');
+      setIsFading(true);
       setTimeout(() => {
         setCurrentItemIndex(currentItemIndex + 1);
+        setIsFading(false);
         setAnimDirection(null);
-      }, 150);
+      }, 400); // 400ms for a smoother effect
     }
   };
 
   const prevItem = () => {
-    if (currentItemIndex > 0) {
+    if (currentItemIndex > 0 && !isFading) {
       setAnimDirection('left');
+      setIsFading(true);
       setTimeout(() => {
         setCurrentItemIndex(currentItemIndex - 1);
+        setIsFading(false);
         setAnimDirection(null);
-      }, 150);
+      }, 400);
     }
   };
 
@@ -260,7 +265,14 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 >
                   <ArrowLeft className="w-7 h-7" />
                 </button>
-                <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white mx-auto">
+                <div className={`relative w-48 h-48 sm:w-64 sm:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white mx-auto
+                  transition-all duration-400
+                  ${isFading && animDirection === 'right' ? 'opacity-0 -translate-x-10' : ''}
+                  ${isFading && animDirection === 'left' ? 'opacity-0 translate-x-10' : ''}
+                  ${!isFading && animDirection === 'right' ? 'opacity-100 translate-x-10' : ''}
+                  ${!isFading && animDirection === 'left' ? 'opacity-100 -translate-x-10' : ''}
+                  ${!isFading && !animDirection ? 'opacity-100 translate-x-0' : ''}
+                `}>
                   {category === 'colors' ? (
                     <div
                       className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-gray-200 mx-auto"

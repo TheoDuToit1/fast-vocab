@@ -83,8 +83,6 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
         ${isSelected ? 'ring-4 ring-blue-400' : ''}
       `}
     >
-      {/* Debug: Show item.id */}
-      <div style={{position:'absolute',top:2,left:2,fontSize:10,background:'#222',color:'#fff',padding:'2px 4px',borderRadius:4,zIndex:99,opacity:0.7}}>{item.id}</div>
       <div className={`
         w-36 h-44 flex flex-col items-center justify-center
         transition-all duration-200

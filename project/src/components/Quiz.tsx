@@ -87,6 +87,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         hex: undefined,
       });
       items = alphabetData.starter.map(normalizeAlphabet);
+      console.log('[ALPHABET DEBUG] items:', items);
     } else if (categoryId === 'animals') {
       const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeAnimal = (imgPath: string) => {
@@ -375,7 +376,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const [totalWrong, setTotalWrong] = useState(0);
 
   // --- Scoring logic ---
-  const BASE_POINTS = 10; // Practice Mode only
+  const BASE_POINTS = 100; // Practice Mode only
 
   // --- Tap-to-match state for mobile ---
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -408,24 +409,16 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // --- Debug state ---
-  const [debugText, setDebugText] = useState('');
-  const [forceRerender, setForceRerender] = useState(0);
-
   // --- Core drop logic ---
-  const handleItemDrop = useCallback((itemId: string, zoneId: string, event: any) => {
+  const handleItemDrop = useCallback((itemId: string, zoneId: string, event?: any) => {
     if (!itemId || !gameState.isPlaying) return;
     const item = currentItemsRef.current.find((item: QuizItem) => item.id === itemId);
     const isCorrect = item?.id === zoneId;
-    setDebugText(`DROP: itemId=${itemId}, zoneId=${zoneId}, isCorrect=${isCorrect}, currentSet=${currentSet}, matchedPairs=${JSON.stringify(matchedPairs)}`);
-    console.log('[DEBUG] handleItemDrop currentItems:', currentItemsRef.current.map(i => i.id));
     if (!item) {
-      setDropWarning(`No item found for id: ${itemId}`);
       setTimeout(() => setDropWarning(null), 2000);
       return;
     }
     if (!currentItemsRef.current.some(i => i.id === zoneId)) {
-      setDropWarning(`No drop zone found for id: ${zoneId}`);
       setTimeout(() => setDropWarning(null), 2000);
       return;
     }
@@ -441,29 +434,35 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     };
 
     const advanceSet = () => {
-      setDebugText(dt => dt + ` | ADVANCE SET: currentSet=${currentSet + 1}`);
-      let nextSet = currentSet + 1;
-      if (nextSet >= shuffledSets.length) {
-        const allItems = shuffledSets.flat();
-        const reshuffled = shuffleArray(allItems).slice(0, 3);
-        setShuffledSets([reshuffled]);
-        setCurrentSet(0);
-      } else {
-        setCurrentSet(nextSet);
-      }
-      setMatchedPairs([]);
-      setDraggedItem(null);
-      setHoveredZone(null);
-      setIncorrectDrop(null);
-      setCurrentSetMistake(false);
-      setForceRerender(f => f + 1); // Force re-render
+      setIsSliding(true);
+      setTimeout(() => {
+        let nextSet = currentSet + 1;
+        if (nextSet >= shuffledSets.length) {
+          const allItems = shuffledSets.flat();
+          const reshuffled = shuffleArray(allItems).slice(0, 3);
+          setShuffledSets([reshuffled]);
+          setCurrentSet(0);
+        } else {
+          setCurrentSet(nextSet);
+        }
+        setMatchedPairs([]);
+        setDraggedItem(null);
+        setHoveredZone(null);
+        setIncorrectDrop(null);
+        setCurrentSetMistake(false);
+        setTimeout(() => setIsSliding(false), 400); // 400ms animation
+      }, 10); // slight delay to allow exit animation if needed
     };
 
     if (isCorrect) {
+      const points = BASE_POINTS * comboMultiplier;
+      updateGameState(prev => ({ score: prev.score + points }));
+      // Practice Mode: Add time for correct answer
+      if (gameState.mode === 'normal' && timerBarRef.current) {
+        timerBarRef.current.addTime(2);
+      }
       setMatchedPairs(prev => {
         const updated = [...prev, { itemId, zoneId }];
-        console.log('[MATCHED] matchedPairs updated:', updated);
-        // If this was the last match in the set, delay and advance set
         if (updated.length === currentItemsRef.current.length) {
           setTimeout(advanceSet, 1200);
         }
@@ -473,14 +472,17 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       playCorrectSound();
       if (item) setTimeout(() => speakQuizWord(item), 600);
       const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
-      addFloatingScore(1, rect.left + rect.width / 2, rect.top);
-      setForceRerender(f => f + 1); // Force re-render
+      addFloatingScore(points, rect.left + rect.width / 2, rect.top);
     } else {
       setIncorrectDrop(itemId);
+      setCurrentSetMistake(true);
+      // Practice Mode: Subtract time for wrong answer
+      if (gameState.mode === 'normal' && timerBarRef.current) {
+        timerBarRef.current.subtractTime(3);
+      }
       setTimeout(() => setIncorrectDrop(null), 1000);
       setTotalWrong(prev => prev + 1);
       playWrongSound();
-      setForceRerender(f => f + 1); // Force re-render
     }
     setDraggedItem(null);
     setHoveredZone(null);
@@ -489,7 +491,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // --- Drop logic for drag-and-drop ---
   const handleDrop = useCallback((zoneId: string, event: React.DragEvent) => {
-    console.log('[QUIZ] handleDrop called', zoneId, draggedItemRef.current);
     event.preventDefault();
     if (!draggedItemRef.current || !gameState.isPlaying) return;
     handleItemDrop(draggedItemRef.current, zoneId, event);
@@ -694,10 +695,8 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // --- Infinite Loop Logic ---
   useEffect(() => {
-    console.count('Infinite set effect');
     if (isSetComplete && (gameState.mode === 'normal' || gameState.mode === 'timed')) {
       if (categoryId === 'numbers' && numbersInfiniteSetRanOnce) {
-        console.warn('Numbers infinite set effect already ran once, skipping to prevent freeze.');
         return;
       }
       setTimeout(() => {
@@ -747,7 +746,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         else if (categoryId === 'clothes') pool = clothesData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i }));
         else if (categoryId === 'food') pool = foodData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i }));
         if (!pool || pool.length === 0) {
-          console.warn('No valid items in pool for category:', categoryId);
           return; // GUARD: Don't update state if pool is empty
         }
         const reshuffled = shuffleArray(pool).slice(0, 3);
@@ -774,14 +772,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   // Add drop warning state and UI
   const [dropWarning, setDropWarning] = useState<string | null>(null);
 
-  // Debug overlay for currentItems, shuffledSets, currentSet
-  const debugOverlay = (
-    <div style={{position:'fixed',bottom:60,left:10,zIndex:9999,background:'#111',color:'#0f0',padding:'8px 14px',borderRadius:8,fontSize:12,opacity:0.92,maxWidth:400,wordBreak:'break-all'}}>
-      <div>currentSet: {currentSet}</div>
-      <div>currentItems: {JSON.stringify(currentItems.map(i => i.id))}</div>
-      <div>shuffledSets: {JSON.stringify(shuffledSets.map(set => set.map(i => i.id)))}</div>
-    </div>
-  );
+  const [isSliding, setIsSliding] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
@@ -947,41 +938,45 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
           </div>
 
           {/* Draggable Items Row */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
-            {currentItems.map((item, idx) => (
-              <DraggableItem
-                key={item.id + '-' + idx}
-                item={item}
-                isDragging={draggedItem === item.id}
-                isMatched={isItemMatched(item.id)}
-                isIncorrect={incorrectDrop === item.id}
-                onDragStart={() => handleDragStart(item.id)}
-                onDragEnd={handleDragEnd}
-                onClick={isMobile ? () => handleItemTap(item.id) : undefined}
-                isSelected={isMobile && selectedItemId === item.id}
-              />
-            ))}
+          <div className={`transition-all duration-400 ${isSliding ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
+              {currentItems.map((item, idx) => (
+                <DraggableItem
+                  key={item.id + '-' + idx}
+                  item={item}
+                  isDragging={draggedItem === item.id}
+                  isMatched={isItemMatched(item.id)}
+                  isIncorrect={incorrectDrop === item.id}
+                  onDragStart={() => handleDragStart(item.id)}
+                  onDragEnd={handleDragEnd}
+                  onClick={isMobile ? () => handleItemTap(item.id) : undefined}
+                  isSelected={isMobile && selectedItemId === item.id}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Drop Zones Row */}
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-16 mt-8 sm:mt-16">
-            {shuffledDropZones.map((item, idx) => (
-              <DropZone
-                key={item.id + '-' + idx}
-                zone={{
-                  id: item.id,
-                  label: categoryId === 'alphabet' ? item.name.toUpperCase() : item.name,
-                  color: categoryId === 'alphabet' ? 'yellow-400' : 'blue-400',
-                }}
-                isHovered={hoveredZone === item.id}
-                matchedItem={getMatchedItem(item.id)}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={isMobile ? () => handleZoneTap(item.id) : undefined}
-                isActive={isMobile && !!selectedItemId}
-              />
-            ))}
+          <div className={`transition-all duration-400 ${isSliding ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-16 mt-8 sm:mt-16">
+              {shuffledDropZones.map((item, idx) => (
+                <DropZone
+                  key={item.id + '-' + idx}
+                  zone={{
+                    id: item.id,
+                    label: categoryId === 'alphabet' ? item.name.toLowerCase() : item.name,
+                    color: categoryId === 'alphabet' ? 'yellow-400' : 'blue-400',
+                  }}
+                  isHovered={hoveredZone === item.id}
+                  matchedItem={getMatchedItem(item.id)}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={isMobile ? () => handleZoneTap(item.id) : undefined}
+                  isActive={isMobile && !!selectedItemId}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -1030,24 +1025,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
           {dropWarning}
         </div>
       )}
-
-      {debugText && (
-        <div className="fixed top-36 left-1/2 -translate-x-1/2 bg-black text-green-300 px-6 py-3 rounded-xl shadow-lg z-50 font-mono text-xs">
-          {debugText}
-          <br />currentSet: {currentSet}
-          <br />matchedPairs: {JSON.stringify(matchedPairs)}
-          <br />currentItems: {JSON.stringify(currentItems.map(i => i.id))}
-        </div>
-      )}
-
-      {/* In the main return, show matchedPairs overlay */}
-      <div style={{position:'fixed',bottom:10,left:10,zIndex:9999,background:'#222',color:'#fff',padding:'6px 12px',borderRadius:8,fontSize:12,opacity:0.85}}>
-        matchedPairs: {JSON.stringify(matchedPairs)}
-        <br />last drop: {debugText}
-      </div>
-
-      {/* In the main return, render the debug overlay */}
-      {debugOverlay}
     </div>
   );
 };

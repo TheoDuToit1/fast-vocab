@@ -35,6 +35,9 @@ const QuizPage: React.FC = () => {
       if (skipModeModal) {
         setShowGameModeModal(false);
         setShowNameModal(true);
+        if (mode === 'timed') {
+          updateGameState({ isPlaying: true });
+        }
       }
     }
   }, [mode, speed, difficulty, updateGameState, resetGame, isInitialized, skipModeModal]);

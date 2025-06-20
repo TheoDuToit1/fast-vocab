@@ -99,8 +99,6 @@ const DropZone: React.FC<DropZoneProps> = ({
         ${isActive && !matchedItem ? 'ring-4 ring-blue-400' : ''}
       `}
     >
-      {/* Debug: Show zone.id */}
-      <div style={{position:'absolute',top:2,right:2,fontSize:10,background:'#222',color:'#fff',padding:'2px 4px',borderRadius:4,zIndex:99,opacity:0.7}}>{zone.id}</div>
       <span className={`
         font-bold text-lg transition-colors duration-200
         max-w-[7rem] text-center overflow-hidden whitespace-nowrap text-ellipsis
