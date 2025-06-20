@@ -373,23 +373,21 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   // --- Scoring logic ---
   const BASE_POINTS = 10; // Practice Mode only
 
-  // --- Drop logic ---
-  const handleDrop = useCallback((zoneId: string, event: React.DragEvent) => {
-    event.preventDefault();
-    if (!draggedItem || !gameState.isPlaying) return;
-    const item = currentItems.find((item: QuizItem) => item.id === draggedItem);
+  // --- Core drop logic ---
+  const handleItemDrop = useCallback((itemId: string, zoneId: string, event: any) => {
+    if (!itemId || !gameState.isPlaying) return;
+    const item = currentItems.find((item: QuizItem) => item.id === itemId);
     const isCorrect = item?.id === zoneId;
     const now = Date.now();
 
     if (gameState.mode === 'timed') {
-      // Challenge Mode: only count matches, no scoring
       if (isCorrect) {
-        setMatchedPairs(prev => [...prev, { itemId: draggedItem, zoneId }]);
+        setMatchedPairs(prev => [...prev, { itemId, zoneId }]);
         setTotalCorrect(prev => prev + 1);
         playCorrectSound();
         if (item) setTimeout(() => speakWord(item.name), 600);
       } else {
-        setIncorrectDrop(draggedItem);
+        setIncorrectDrop(itemId);
         setTimeout(() => setIncorrectDrop(null), 1000);
         setTotalWrong(prev => prev + 1);
         playWrongSound();
@@ -404,10 +402,8 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     let speedBonusPoints = 0;
     if (isCorrect) {
       setTotalCorrect(prev => prev + 1);
-      // Speed bonus logic
       const updatedTimestamps = [...recentCorrectTimestamps, now].filter(ts => now - ts <= 2000);
       setRecentCorrectTimestamps(updatedTimestamps);
-      // Combo multiplier logic
       if (comboActive) {
         points = Math.round(points * comboMultiplier);
       }
@@ -415,40 +411,50 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         setShowSpeedBonus(true);
         setTimeout(() => setShowSpeedBonus(false), 1200);
         setRecentCorrectTimestamps([]);
-        // Multiply combo-multiplied points for this answer by 1.6 for speed bonus
         speedBonusPoints = Math.round(points * 1.6);
         updateGameState({ score: gameState.score + speedBonusPoints });
-        // Floating score for speed bonus
-        const rect = event.currentTarget.getBoundingClientRect();
+        const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
         addFloatingScore(speedBonusPoints, rect.left + rect.width / 2, rect.top - 40);
       } else {
         updateGameState({ score: gameState.score + points });
-        // Floating score for normal/correct answer
-      const rect = event.currentTarget.getBoundingClientRect();
+        const rect = event?.currentTarget?.getBoundingClientRect?.() || { left: 0, top: 0, width: 0, height: 0 };
         addFloatingScore(points, rect.left + rect.width / 2, rect.top);
       }
-      setMatchedPairs(prev => [...prev, { itemId: draggedItem, zoneId }]);
+      setMatchedPairs(prev => [...prev, { itemId, zoneId }]);
       setCurrentSetMistake(false);
       playCorrectSound();
       if (item) setTimeout(() => speakWord(item.name), 600);
       if (timerBarRef.current) timerBarRef.current.addTime(5);
     } else {
       setCurrentSetMistake(true);
-      // Reset speed bonus
       setRecentCorrectTimestamps([]);
       setShowSpeedBonus(false);
-      // Reset combo
       setComboActive(false);
       setComboMultiplier(1.0);
-      setIncorrectDrop(draggedItem);
+      setIncorrectDrop(itemId);
       setTimeout(() => setIncorrectDrop(null), 1000);
       setTotalWrong(prev => prev + 1);
       playWrongSound();
       if (timerBarRef.current) timerBarRef.current.subtractTime(7);
-      }
+    }
     setDraggedItem(null);
     setHoveredZone(null);
-  }, [draggedItem, gameState.isPlaying, gameState.score, currentItems, addFloatingScore, updateGameState, gameState.mode, timerBarRef, recentCorrectTimestamps, comboActive, comboMultiplier]);
+  }, [gameState.isPlaying, gameState.mode, BASE_POINTS, comboActive, comboMultiplier, addFloatingScore, playCorrectSound, playWrongSound, speakWord, timerBarRef, updateGameState, currentItems, recentCorrectTimestamps]);
+
+  // --- Drop logic for drag-and-drop ---
+  const handleDrop = useCallback((zoneId: string, event: React.DragEvent) => {
+    event.preventDefault();
+    if (!draggedItem || !gameState.isPlaying) return;
+    handleItemDrop(draggedItem, zoneId, event);
+  }, [draggedItem, gameState.isPlaying, handleItemDrop]);
+
+  // --- Tap-to-drop handler ---
+  const handleZoneTap = useCallback((zoneId: string) => {
+    if (!gameState.isPlaying || !selectedItemId) return;
+    // Use the same drop logic
+    handleItemDrop(selectedItemId, zoneId, { currentTarget: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 0, height: 0 }) } });
+    setSelectedItemId(null);
+  }, [gameState.isPlaying, selectedItemId, handleItemDrop]);
 
   // --- Set completion effect: update perfect set streak and combo multiplier ---
   useEffect(() => {
@@ -740,7 +746,17 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
   }, [isSetComplete, gameState.mode, categoryId, currentSet]);
 
-  console.log('Quiz render');
+  // --- Tap-to-match state for mobile ---
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Helper: detect mobile (simple check)
+  const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+  // --- Tap-to-select handler ---
+  const handleItemTap = useCallback((itemId: string) => {
+    if (!gameState.isPlaying) return;
+    setSelectedItemId(itemId);
+  }, [gameState.isPlaying]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
@@ -889,12 +905,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
       {/* Main Game Area - Hide when leaderboard is open */}
       {!showLeaderboard && (
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-2 sm:px-6">
         {/* Game Container */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
-          
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-3 sm:p-12 shadow-xl border border-white/20 overflow-y-auto min-h-[70vh]">
           {/* Mode Indicator */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-4 sm:mb-8">
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${
               gameState.mode === 'timed' 
                 ? 'bg-orange-100 text-orange-800' 
@@ -905,11 +920,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             </div>
           </div>
 
-          {/* Mode Indicator only (no difficulty buttons) */}
-
-          {/* Animals Row */}
-            <div className="flex flex-wrap justify-center gap-8 mt-6">
-              {currentItems.map((item, idx) => (
+          {/* Draggable Items Row */}
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
+            {currentItems.map((item, idx) => (
               <DraggableItem
                 key={item.id + '-' + idx}
                 item={item}
@@ -918,13 +931,15 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
                 isIncorrect={incorrectDrop === item.id}
                 onDragStart={() => handleDragStart(item.id)}
                 onDragEnd={handleDragEnd}
+                onClick={isMobile ? () => handleItemTap(item.id) : undefined}
+                isSelected={isMobile && selectedItemId === item.id}
               />
             ))}
           </div>
 
           {/* Drop Zones Row */}
-            <div className="flex justify-center items-center gap-16 mt-16">
-              {shuffledDropZones.map((item, idx) => (
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-16 mt-8 sm:mt-16">
+            {shuffledDropZones.map((item, idx) => (
               <DropZone
                 key={item.id + '-' + idx}
                 zone={{
@@ -937,6 +952,8 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                onClick={isMobile ? () => handleZoneTap(item.id) : undefined}
+                isActive={isMobile && !!selectedItemId}
               />
             ))}
           </div>

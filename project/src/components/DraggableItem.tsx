@@ -16,6 +16,8 @@ interface DraggableItemProps {
   isIncorrect: boolean;
   onDragStart: (itemId: string) => void;
   onDragEnd: () => void;
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 const speakWord = (word: string) => {
@@ -29,7 +31,9 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
   isMatched,
   isIncorrect,
   onDragStart,
-  onDragEnd
+  onDragEnd,
+  onClick,
+  isSelected
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', item.id);
@@ -70,11 +74,13 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
       draggable
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
+      onClick={onClick}
       className={`
         relative cursor-grab active:cursor-grabbing
         transform transition-all duration-200 ease-out
         ${isDragging ? 'scale-110 rotate-2 z-50' : 'hover:scale-105'}
         ${isIncorrect ? 'animate-shake' : ''}
+        ${isSelected ? 'ring-4 ring-blue-400' : ''}
       `}
     >
       <div className={`

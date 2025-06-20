@@ -366,7 +366,7 @@ const GameModeModal: React.FC<GameModeModalProps> = ({ isOpen, onSelectSettings,
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl p-8 shadow-2xl transform animate-in zoom-in duration-300 max-w-4xl w-full mx-4">
+      <div className="bg-white rounded-3xl p-8 shadow-2xl transform animate-in zoom-in duration-300 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {renderContent()}
         
         {selectedMode && selectedMode !== 'study' && (

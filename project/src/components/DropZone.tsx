@@ -22,6 +22,8 @@ interface DropZoneProps {
   onDragOver: (zoneId: string) => void;
   onDragLeave: () => void;
   onDrop: (zoneId: string, event: React.DragEvent) => void;
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
 const DropZone: React.FC<DropZoneProps> = ({
@@ -30,7 +32,9 @@ const DropZone: React.FC<DropZoneProps> = ({
   matchedItem,
   onDragOver,
   onDragLeave,
-  onDrop
+  onDrop,
+  onClick,
+  isActive
 }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -82,6 +86,7 @@ const DropZone: React.FC<DropZoneProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={onDragLeave}
       onDrop={handleDrop}
+      onClick={onClick}
       className={`
         relative w-32 h-32 rounded-full border-4 border-dashed
         flex items-center justify-center cursor-pointer
@@ -90,6 +95,7 @@ const DropZone: React.FC<DropZoneProps> = ({
           ? 'border-blue-400 bg-blue-50 scale-110 ring-4 ring-blue-200 animate-pulse' 
           : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50'
         }
+        ${isActive && !matchedItem ? 'ring-4 ring-blue-400' : ''}
       `}
     >
       <span className={`

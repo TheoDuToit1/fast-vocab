@@ -187,29 +187,30 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-4">
-          <button 
+      <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4 p-4 sm:p-6 max-w-7xl mx-auto">
+        {/* Left: Home, Icon, Title */}
+        <div className="flex flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-start mb-2 sm:mb-0">
+          <button
             onClick={onBackToHome}
-            className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors"
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors"
           >
             <Home className="w-6 h-6 text-green-600" />
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-green-600">Study Mode</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold text-green-600">Study Mode</h1>
           </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
+        {/* Center: Counter and Audio */}
+        <div className="flex flex-row items-center gap-2 w-full sm:w-auto justify-center mb-2 sm:mb-0">
+          <div className="bg-green-100 text-green-800 px-3 py-1 sm:px-4 sm:py-2 rounded-full font-semibold text-sm sm:text-base">
             {currentItemIndex + 1} of {allItems.length}
           </div>
           <button
             onClick={() => setAudioEnabled(a => !a)}
-            className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
             aria-label={audioEnabled ? 'Mute audio' : 'Unmute audio'}
           >
             {audioEnabled ? (
@@ -218,9 +219,12 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
               <Volume2 className="w-6 h-6 text-gray-400" />
             )}
           </button>
+        </div>
+        {/* Right: Start Quiz */}
+        <div className="w-full sm:w-auto flex justify-center sm:justify-end">
           <button
             onClick={onStartQuiz}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+            className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2 text-base sm:text-lg justify-center"
           >
             <Play className="w-5 h-5" />
             Start Quiz
@@ -229,48 +233,54 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
       </div>
 
       {/* Main Study Area */}
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+      <div className="w-full sm:max-w-4xl mx-auto px-2 sm:px-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-2 sm:p-12 shadow-xl border border-white/20">
 
           {/* Current Item Display */}
           {currentItem && (
-            <div className="text-center mb-12 flex items-center justify-center gap-4">
+            <div className="relative text-center mb-8 sm:mb-12 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
               {/* Left Arrow */}
               <button
                 onClick={prevItem}
                 disabled={currentItemIndex === 0}
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="hidden sm:flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed mb-2 sm:mb-0"
                 aria-label="Previous"
               >
                 <ArrowLeft className="w-7 h-7" />
               </button>
-              {/* Animated Item */}
-              <div className={`relative inline-block mb-8 transition-all duration-300
-                ${animDirection === 'right' ? 'opacity-0 translate-x-12 scale-95' : ''}
-                ${animDirection === 'left' ? 'opacity-0 -translate-x-12 scale-95' : ''}
-                ${!animDirection ? 'opacity-100 translate-x-0 scale-100' : ''}
-              `}>
-                <div className="w-64 h-64 rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white relative">
+              {/* Card and mobile arrows */}
+              <div className="relative inline-block mb-6 sm:mb-8 transition-all duration-300 w-full">
+                {/* Mobile left arrow */}
+                <button
+                  onClick={prevItem}
+                  disabled={currentItemIndex === 0}
+                  className="sm:hidden absolute left-[-0.5rem] top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10"
+                  aria-label="Previous"
+                  style={{ left: '-0.5rem' }}
+                >
+                  <ArrowLeft className="w-7 h-7" />
+                </button>
+                <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white mx-auto">
                   {category === 'colors' ? (
                     <div
-                      className="w-48 h-48 rounded-full border-4 border-gray-200 mx-auto"
+                      className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-gray-200 mx-auto"
                       style={{ background: currentItem.image }}
                     />
                   ) : category === 'numbers' ? (
                     <div className="flex flex-col items-center justify-center w-full h-full">
                       <span
-                        className="text-7xl font-extrabold mb-4 select-none"
+                        className="text-5xl sm:text-7xl font-extrabold mb-2 sm:mb-4 select-none"
                         style={{ color: currentItem.hex || '#6366f1', fontFamily: 'Comic Sans MS, Comic Neue, cursive, Inter, sans-serif' }}
                       >
                         {currentItem.display}
                       </span>
-                      <span className="text-xl font-medium text-gray-600 mt-2">{currentItem.word}</span>
+                      <span className="text-lg sm:text-xl font-medium text-gray-600 mt-1 sm:mt-2">{currentItem.word}</span>
                     </div>
                   ) : (
                     <img
                       src={currentItem.image}
                       alt={currentItem.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full max-w-[12rem] max-h-[12rem] sm:max-w-full sm:max-h-full object-contain sm:object-cover"
                     />
                   )}
                   {/* Speaker Button - moved up */}
@@ -288,33 +298,44 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                         window.speechSynthesis.speak(utterance);
                       }
                     }}
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 w-12 h-12 bg-white/80 rounded-full flex items-center justify-center shadow-lg hover:bg-green-100 transition-colors z-10"
+                    className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-white/80 rounded-full flex items-center justify-center shadow-lg hover:bg-green-100 transition-colors z-10"
                     aria-label={`Play audio for ${currentItem.name}`}
                   >
                     <Volume2 className="w-6 h-6 text-green-600" />
                   </button>
+                  {/* Eye icon - now inside the card */}
+                  <div className="absolute top-2 right-1 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
+                    onClick={() => setShowImageModal(true)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="Enlarge image"
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowImageModal(true); }}
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                  </div>
                 </div>
                 {/* Name under main picture for all study modes - moved down, white background */}
-                <div className="mt-12 flex justify-center">
-                  <div className="bg-white rounded-xl px-8 py-4 shadow-lg text-2xl font-bold text-gray-700 select-none inline-block">
+                <div className="mt-6 sm:mt-12 flex justify-center">
+                  <div className="bg-white rounded-xl px-4 py-2 sm:px-8 sm:py-4 shadow-lg text-lg sm:text-2xl font-bold text-gray-700 select-none inline-block">
                     {category === 'numbers' ? currentItem.word : currentItem.name}
                   </div>
                 </div>
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
-                  onClick={() => setShowImageModal(true)}
-                  tabIndex={0}
-                  role="button"
-                  aria-label="Enlarge image"
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setShowImageModal(true); }}
+                {/* Mobile right arrow */}
+                <button
+                  onClick={nextItem}
+                  disabled={currentItemIndex === allItems.length - 1}
+                  className="sm:hidden absolute right-[-0.5rem] top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10"
+                  aria-label="Next"
+                  style={{ right: '-0.5rem' }}
                 >
-                  <Eye className="w-6 h-6 text-white" />
-                </div>
+                  <ArrowRight className="w-7 h-7" />
+                </button>
               </div>
-              {/* Right Arrow */}
+              {/* Right Arrow (desktop) */}
               <button
                 onClick={nextItem}
                 disabled={currentItemIndex === allItems.length - 1}
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="hidden sm:flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed mb-2 sm:mb-0"
                 aria-label="Next"
               >
                 <ArrowRight className="w-7 h-7" />
@@ -323,11 +344,11 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
           )}
 
           {/* Navigation Controls */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
             <button
               onClick={prevItem}
               disabled={currentItemIndex === 0}
-              className="flex items-center gap-2 bg-gray-100 text-gray-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hidden sm:flex items-center gap-2 bg-gray-100 text-gray-600 px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto mb-2 sm:mb-0"
             >
               <ArrowLeft className="w-5 h-5" />
               Previous
@@ -336,7 +357,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
             {/* Set Navigation */}
             <div className="flex flex-col items-center w-full">
               {/* Stepper Bar */}
-              <div className="relative w-full max-w-xl h-14 flex items-center justify-center my-6">
+              <div className="relative w-full max-w-xs sm:max-w-xl h-14 flex items-center justify-center my-4 sm:my-6 overflow-x-auto">
                 {/* Progress Bar (background) */}
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 bg-gray-200 rounded-full w-full z-0"></div>
                 {/* Progress Bar (filled) */}
@@ -347,9 +368,9 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 {/* Steps */}
                 <div className="relative flex w-full justify-between z-10 items-center">
                   {/* Start label */}
-                  <span className="absolute left-0 -top-6 text-xs text-gray-400 select-none">Start</span>
+                  <span className="absolute left-0 -top-6 text-xs text-gray-400 select-none hidden sm:block">Start</span>
                   {/* End label */}
-                  <span className="absolute right-0 -top-6 text-xs text-gray-400 select-none">End</span>
+                  <span className="absolute right-0 -top-6 text-xs text-gray-400 select-none hidden sm:block">End</span>
                   {(() => {
                     // Show: first, last, current, 2 neighbors each side, ellipsis
                     const maxDots = 9;
@@ -379,14 +400,14 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                           key={idx}
                           onClick={() => setCurrentItemIndex(Number(idx))}
                           className={`transition-all duration-200 flex items-center justify-center
-                            ${isActive ? 'w-12 h-12 bg-green-500 text-white shadow-lg ring-4 ring-green-200 scale-110 z-20' : 'w-5 h-5 bg-white border-2 border-green-300 text-green-600 z-10'}
+                            ${isActive ? 'w-10 h-10 sm:w-12 sm:h-12 bg-green-500 text-white shadow-lg ring-4 ring-green-200 scale-110 z-20' : 'w-5 h-5 bg-white border-2 border-green-300 text-green-600 z-10'}
                             rounded-full font-bold mx-1 focus:outline-none focus:ring-2 focus:ring-green-400
                           `}
                           aria-label={`Go to item ${Number(idx) + 1}`}
                           title={`Go to item ${Number(idx) + 1}`}
                           style={{ position: 'relative' }}
                         >
-                          {isActive ? <span className="text-lg font-bold">{Number(idx) + 1}</span> : ''}
+                          {isActive ? <span className="text-base sm:text-lg font-bold">{Number(idx) + 1}</span> : ''}
                         </button>
                       );
                     });
@@ -394,13 +415,13 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 </div>
               </div>
               {/* Progress Text */}
-              <div className="text-sm text-gray-500 mt-1">{current + 1} of {total}</div>
+              <div className="text-xs sm:text-sm text-gray-500 mt-1">{current + 1} of {total}</div>
             </div>
 
             <button
               onClick={nextItem}
               disabled={currentItemIndex === allItems.length - 1}
-              className="flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hidden sm:flex items-center gap-2 bg-green-100 text-green-600 px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-semibold hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto mt-2 sm:mt-0"
             >
               Next
               <ArrowRight className="w-5 h-5" />
