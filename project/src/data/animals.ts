@@ -11,7 +11,7 @@ export const dropZones: DropZoneData[] = [
 export const starterAnimals = [
   'mouse-1067852.png',
   'frog-1067846.png',
-  'bird-1067837.png',
+  'parrot-1864474.png',
   'rabbit-1067831.png',
   'fish-1067826.png',
   'turtle-1067822.png',
@@ -49,7 +49,7 @@ export const starterAnimals = [
   'dolphin-3065698.png',
   'deer-3065695.png',
   'bear-3065687.png',
-].map(name => `/images/animals/starter/${name}`);
+].map(name => name === 'parrot-1864474.png' ? `/images/animals/mover/parrot-1864474.png` : `/images/animals/starter/${name}`);
 
 // Mover (was normal)
 export const moverAnimals = [

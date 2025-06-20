@@ -149,7 +149,7 @@ const CategoryPage: React.FC = () => {
                   </div>
                   {/* Difficulty Badge (if any) */}
                   {category.difficulty && (
-                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(category.difficulty)}`}> 
+                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(category.difficulty)}`}>
                       {category.difficulty}
                     </div>
                   )}

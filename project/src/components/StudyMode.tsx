@@ -231,7 +231,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
       {/* Main Study Area */}
       <div className="max-w-4xl mx-auto px-6">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
-          
+
           {/* Current Item Display */}
           {currentItem && (
             <div className="text-center mb-12 flex items-center justify-center gap-4">

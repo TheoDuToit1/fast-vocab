@@ -42,7 +42,7 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
         <div className="w-36 h-44 flex flex-col items-center justify-center">
           {item.display !== undefined ? (
             <span
-              className="text-6xl font-extrabold mb-3"
+              className="text-4xl font-extrabold mb-3 break-words max-w-xs"
               style={{ color: item.hex || '#6366f1', fontFamily: 'Inter, sans-serif' }}
             >
               {item.display}
@@ -85,7 +85,7 @@ const DraggableItem: React.FC<DraggableItemProps> = ({
         <div className="relative w-24 h-24 mb-3 flex items-center justify-center">
           {item.display !== undefined ? (
             <span
-              className={`text-6xl font-extrabold select-none`}
+              className={`text-4xl font-extrabold select-none break-words max-w-xs`}
               style={{ color: item.hex || '#6366f1', fontFamily: 'Inter, sans-serif', lineHeight: '5rem' }}
             >
               {item.display}

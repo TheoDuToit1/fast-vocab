@@ -18,7 +18,7 @@ import { foodData } from '../data/food';
 import { categories } from '../data/categories';
 import { useGame } from '../context/GameContext';
 import { useGameTimer } from '../hooks/useGameTimer';
-import { generateRandomNumbers, getNumberQuizItem } from '../data/numbers';
+import { generateRandomNumbers, getNumberQuizItem, numbersData } from '../data/numbers';
 
 interface QuizProps {
   onBackToHome: () => void;
@@ -71,13 +71,19 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
   // At the top of the component, after useState declarations:
   const colorPoolRef = useRef<any[]>([]);
+  const animalPoolRef = useRef<any[]>([]);
 
   // Build and shuffle all sets/items ONCE per game session
   useEffect(() => {
     // Build items array as before
     let items: any[] = [];
     if (categoryId === 'alphabet') {
-      items = alphabetData.starter.map(item => ({ ...item, category: '', hex: undefined, image: item.image }));
+      const validAlphabetItems = alphabetData.starter.filter(item => !!item.name);
+      console.log('Invalid alphabet items:', alphabetData.starter.filter(item => !item.name));
+      items = validAlphabetItems.map((item, i) => ({ ...item, id: item.name.toLowerCase() + '-' + i }));
+      // Log and filter for debugging
+      console.log('Alphabet pool:', items);
+      items = items.filter(item => item.id && item.name && item.image);
     } else if (categoryId === 'colors') {
       const difficulty = (gameState as any).difficulty || 'starter';
       // Define color sets
@@ -129,18 +135,24 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       colorPoolRef.current = colorPool;
       items = colorPool;
     } else if (categoryId === 'numbers') {
-      const nums = generateRandomNumbers(27, 1); // Use 1-digit numbers for demo
-      items = nums.map(n => {
+      // Use the same number generation as Study Mode for the current difficulty
+      let digits = 2;
+      const difficulty = (gameState as any).difficulty || 'starter';
+      if (difficulty === 'flyer') digits = 4;
+      else if (difficulty === 'mover') digits = 3;
+      else digits = 2;
+      const nums = generateRandomNumbers(40, digits);
+      items = nums.map((n, i) => {
         const quizItem = getNumberQuizItem(n);
         return {
-          id: quizItem.id,
-          name: quizItem.word,
+          id: quizItem.id + '-' + i,
+          name: quizItem.word, // word for drop zone
+          display: quizItem.value, // numeral for draggable
           value: quizItem.value,
-          display: quizItem.value,
-          category: '',
           hex: '#6366f1',
         };
       });
+      items = items.filter(item => item.id && item.name);
     } else if (categoryId === 'animals') {
       // Use correct set based on difficulty
       const difficulty = (gameState as any).difficulty || 'starter';
@@ -148,7 +160,8 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         const fileName = imgPath.split('/').pop() || '';
         const base = fileName.replace(/\.[^/.]+$/, '');
         let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        if (/^stingray/i.test(base)) displayName = 'Stingray';
+        if (imgPath.includes('parrot-1864474.png')) displayName = 'Bird';
+        else if (/^stingray/i.test(base)) displayName = 'Stingray';
         else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
         else if (/^panda-bear/i.test(base)) displayName = 'Panda';
         return {
@@ -164,13 +177,13 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       } else if (difficulty === 'mover') {
         items = [...animalsData.starter, ...animalsData.mover].map(normalizeAnimal);
       } else if (difficulty === 'flyer') {
-        // Shuffle flyerSet before mapping
         const combinedFlyerSet = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer];
         const shuffledFlyer = shuffleArray(combinedFlyerSet);
         items = shuffledFlyer.map(normalizeAnimal);
       } else {
         items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(normalizeAnimal); // fallback
       }
+      animalPoolRef.current = items;
     } else if (categoryId === 'clothes') {
       const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeClothes = (item: { name: string, image: string }) => ({
@@ -365,7 +378,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     event.preventDefault();
     if (!draggedItem || !gameState.isPlaying) return;
     const item = currentItems.find((item: QuizItem) => item.id === draggedItem);
-    const isCorrect = item?.name === zoneId;
+    const isCorrect = item?.id === zoneId;
     const now = Date.now();
 
     if (gameState.mode === 'timed') {
@@ -576,20 +589,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     return pair ? (currentItems.find(item => item.id === pair.itemId) || null) : null;
   }, [matchedPairs, currentItems]);
 
-  // Fix: Only advance set for non-colors categories
-  useEffect(() => {
-    if (categoryId !== 'colors' && isSetComplete && currentSet < shuffledSets.length - 1) {
-      setTimeout(() => {
-        setCurrentSet(currentSet + 1);
-        setMatchedPairs([]);
-        setDraggedItem(null);
-        setHoveredZone(null);
-        setIncorrectDrop(null);
-        setCurrentSetMistake(false);
-      }, 1000); // 1 second delay for feedback
-    }
-  }, [isSetComplete, currentSet, shuffledSets.length, categoryId]);
-
   // Add state for challenge mode stats
   const [challengeCorrectTotal, setChallengeCorrectTotal] = useState(0);
   const [challengeSetsCompleted, setChallengeSetsCompleted] = useState(0);
@@ -668,36 +667,80 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     }
   }, [isTimeUp, showTimeUp]);
 
+  // DEBUG: Run-once guard for numbers infinite set effect
+  let numbersInfiniteSetRanOnce = false;
+
   // --- Infinite Loop Logic ---
-  // When a set is completed, reshuffle and continue
   useEffect(() => {
+    console.count('Infinite set effect');
     if (isSetComplete && (gameState.mode === 'normal' || gameState.mode === 'timed')) {
+      if (categoryId === 'numbers' && numbersInfiniteSetRanOnce) {
+        console.warn('Numbers infinite set effect already ran once, skipping to prevent freeze.');
+        return;
+      }
       setTimeout(() => {
-        if (categoryId === 'colors') {
-          // Pick a new random set of 3 from the color pool
-          const pool = colorPoolRef.current;
-          const reshuffled = shuffleArray(pool).slice(0, 3);
-          setShuffledSets([reshuffled]);
-          setCurrentSet(0);
+        let pool = [];
+        if (categoryId === 'colors') pool = colorPoolRef.current;
+        else if (categoryId === 'animals') pool = animalPoolRef.current;
+        else if (categoryId === 'alphabet') pool = alphabetData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase() + '-' + i }));
+        else if (categoryId === 'numbers') {
+          // Use numbersData.starter as the pool, just like animals
+          pool = numbersData.starter.map((item, i) => ({
+            ...item,
+            id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i,
+            display: parseInt(item.name, 10).toString() === 'NaN' ? item.name : parseInt(item.name, 10), // show the number as text if possible
+            image: undefined // Remove image so DraggableItem uses display
+          }));
+          pool = pool.filter(item => item.id && item.name);
+          // Split into sets of 3
+          const setSize = 3;
+          const sets = [];
+          for (let i = 0; i < pool.length; i += setSize) {
+            sets.push(pool.slice(i, i + setSize));
+          }
+          if (sets.length > 1 && sets[sets.length - 1].length < setSize) {
+            const last = sets.pop() ?? [];
+            sets[sets.length - 1].push(...last);
+          }
+          // If at the last set, reshuffle and start over
+          if (currentSet + 1 >= sets.length) {
+            const reshuffledSets = shuffleArray(sets.flat()).reduce<any[][]>((acc, item, idx) => {
+              const setIdx = Math.floor(idx / setSize);
+              if (!acc[setIdx]) acc[setIdx] = [];
+              acc[setIdx].push(item);
+              return acc;
+            }, []);
+            setShuffledSets(reshuffledSets);
+            setCurrentSet(0);
+          } else {
+            setCurrentSet(currentSet + 1);
+          }
           setMatchedPairs([]);
           setDraggedItem(null);
           setHoveredZone(null);
           setIncorrectDrop(null);
           setCurrentSetMistake(false);
-        } else {
-          // Default: repeat reshuffled set of 3
-          const reshuffled = shuffleArray(currentItems);
-          setShuffledSets([reshuffled]);
-          setCurrentSet(0);
-          setMatchedPairs([]);
-          setDraggedItem(null);
-          setHoveredZone(null);
-          setIncorrectDrop(null);
-          setCurrentSetMistake(false);
+          return;
         }
+        else if (categoryId === 'clothes') pool = clothesData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i }));
+        else if (categoryId === 'food') pool = foodData.starter.map((item, i) => ({ ...item, id: item.name.toLowerCase().replace(/\s/g, '-') + '-' + i }));
+        if (!pool || pool.length === 0) {
+          console.warn('No valid items in pool for category:', categoryId);
+          return; // GUARD: Don't update state if pool is empty
+        }
+        const reshuffled = shuffleArray(pool).slice(0, 3);
+        setShuffledSets([reshuffled]);
+        setCurrentSet(0);
+        setMatchedPairs([]);
+        setDraggedItem(null);
+        setHoveredZone(null);
+        setIncorrectDrop(null);
+        setCurrentSetMistake(false);
       }, 500); // Short delay for feedback
     }
-  }, [isSetComplete, gameState.mode]);
+  }, [isSetComplete, gameState.mode, categoryId, currentSet]);
+
+  console.log('Quiz render');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
@@ -870,7 +913,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
                 isDragging={draggedItem === item.id}
                 isMatched={isItemMatched(item.id)}
                 isIncorrect={incorrectDrop === item.id}
-                  onDragStart={() => handleDragStart(item.id)}
+                onDragStart={() => handleDragStart(item.id)}
                 onDragEnd={handleDragEnd}
               />
             ))}
@@ -882,12 +925,12 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
               <DropZone
                 key={item.id + '-' + idx}
                 zone={{
-                  id: categoryId === 'alphabet' ? item.id : item.name,
-                  label: categoryId === 'alphabet' ? item.id.toLowerCase() : item.name,
+                  id: item.id,
+                  label: categoryId === 'alphabet' ? item.name.toUpperCase() : item.name,
                   color: categoryId === 'alphabet' ? 'yellow-400' : 'blue-400',
                 }}
-                isHovered={hoveredZone === (categoryId === 'alphabet' ? item.id : item.name)}
-                matchedItem={getMatchedItem(categoryId === 'alphabet' ? item.id : item.name)}
+                isHovered={hoveredZone === item.id}
+                matchedItem={getMatchedItem(item.id)}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -910,38 +953,9 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
       <LeaderboardModal
         isOpen={showLeaderboard}
-        onClose={() => {
-          setShowLeaderboard(false);
-          if (showTimeUp || gameState.mode === 'timed') {
-            onBackToHome();
-          }
-        }}
+        onClose={() => setShowLeaderboard(false)}
         onBackToCategories={onBackToHome}
-        players={(() => {
-          const currentResult = {
-            name: gameState.playerName || 'Guest',
-            score: gameState.mode === 'timed' ? challengeCorrectTotal : gameState.score,
-            mode: gameState.mode,
-            timestamp: Date.now(),
-            category: categoryId,
-          };
-          // Patch all players to ensure category exists
-          const patchedPlayers = players.map(p => ({
-            ...p,
-            category: typeof p.category === 'string' ? p.category : '',
-          }));
-          // Only add the current result if it's not already in the list
-          const alreadyIncluded = patchedPlayers.some(
-            p =>
-              p.name === currentResult.name &&
-              p.score === currentResult.score &&
-              p.mode === currentResult.mode &&
-              p.category === currentResult.category
-          );
-          const result = alreadyIncluded ? patchedPlayers : [currentResult, ...patchedPlayers];
-          console.log('[LeaderboardModal] Players passed to leaderboard:', result);
-          return result;
-        })()}
+        players={players}
         clearLeaderboard={clearLeaderboard}
       />
 
@@ -959,34 +973,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         wrong={totalWrong}
       />
 
-      {/* Only show countdown for timed mode if not showing leaderboard or time up */}
-      {showCountdown && gameState.mode === 'timed' && !gameState.isPlaying && !showLeaderboard && !showTimeUp && (
-        <CountdownTimer 
-          onComplete={handleCountdownComplete} 
-          mode={gameState.mode}
-        />
-      )}
-
-      {/* Optional: Overlay when leaderboard is open */}
-      {showLeaderboard && (
-        <div className="fixed inset-0 bg-black/30 z-40 pointer-events-none" />
-      )}
-
-      {/* In the UI, show speed bonus flash --- */}
-      {showSpeedBonus && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-          <div className="text-center animate-in zoom-in duration-300">
-            <div className="inline-flex items-center gap-4 px-12 py-6 rounded-3xl bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-2xl border-4 border-white transform animate-pulse scale-110">
-              <span className="text-6xl font-black tracking-wider">⚡ Speed Bonus!</span>
-            </div>
-          </div>
+      {(!currentItems || currentItems.length === 0) && (
+        <div className="text-center text-red-600 font-bold text-xl mt-12">
+          No valid items found for this category. Please check your data source.
         </div>
       )}
-
-      {/* Audio elements for correct/wrong/ticking sounds */}
-      <audio ref={correctAudioRef} src="/correct-6033.mp3" preload="auto" />
-      <audio ref={wrongAudioRef} src="/negative_beeps-6008.mp3" preload="auto" />
-      <audio ref={tickingAudioRef} src="/clock-ticking-sound-effect-240503.mp3" preload="auto" />
     </div>
   );
 };

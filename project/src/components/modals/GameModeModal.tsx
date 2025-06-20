@@ -229,7 +229,7 @@ const GameModeModal: React.FC<GameModeModalProps> = ({ isOpen, onSelectSettings,
         className={`group p-6 border-2 rounded-2xl transition-all duration-200 flex flex-col items-center justify-center ${selectedDifficulty === 'starter' ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-green-50'}`}
       >
         <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-green-200 transition-colors">
-          <Sparkles className="w-6 h-6 text-green-600" />
+            <Sparkles className="w-6 h-6 text-green-600" />
         </div>
         <span className="text-xl font-bold text-gray-800">Starter</span>
         <span className="text-gray-600 text-sm mt-1">Easy</span>

@@ -16,7 +16,7 @@ const alphabetItems = alphabetFilenames.map(filename => {
     name: letter.toUpperCase(),
     image: `/images/alphabet/${filename}`
   };
-});
+}); 
 
 export const alphabetData = {
   name: 'Alphabet',
