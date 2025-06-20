@@ -95,4 +95,18 @@ export function generateRandomNumbers(count: number, digits: number): number[] {
     set.add(n);
   }
   return Array.from(set);
-} 
+}
+
+const starterNumbers = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 40, 50, 60, 70, 80, 90, 100
+];
+
+export const numbersData = {
+  name: 'Numbers',
+  starter: starterNumbers.map(n => ({
+    name: numberToWords(n),
+    image: `/images/numbers/${numberToWordFilename(n)}.png` // Assuming filenames match this pattern
+  })),
+  mover: [], // Mover numbers can be added here
+  flyer: [], // Flyer numbers can be added here
+}; 

@@ -130,5 +130,9 @@ export const flyerColors = [
   { id: 'strong-fuchsia', name: 'Strong Fuchsia', hex: '#FF77FF' },
 ];
 
-export const moverSet = [...starterColors, ...moverColors];
-export const flyerSet = [...starterColors, ...moverColors, ...flyerColors]; 
+export const colorsData = {
+  name: 'Colors',
+  starter: starterColors.map(c => ({ name: c.name, image: c.hex })),
+  mover: moverColors.map(c => ({ name: c.name, image: c.hex })),
+  flyer: flyerColors.map(c => ({ name: c.name, image: c.hex })),
+}; 

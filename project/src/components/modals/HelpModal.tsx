@@ -33,7 +33,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           <section>
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-500" />
-              Basic Rules
+              How to Play
             </h3>
             <div className="space-y-3 text-gray-600">
               <p>• Drag animal images to their correct category circles</p>

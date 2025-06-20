@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TTS Proxy</title>
+</head>
+<body>
+  <script>
+    window.speakText = function(text) {
+      const speak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        // Prefer Vietnamese, else default
+        const viVoice = voices.find(v => v.lang.startsWith('vi')) || voices[0];
+        const utter = new SpeechSynthesisUtterance(text);
+        if (viVoice) {
+          utter.voice = viVoice;
+          utter.lang = viVoice.lang;
+        }
+        window.speechSynthesis.speak(utter);
+      };
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = speak;
+      } else {
+        speak();
+      }
+    };
+  </script>
+</body>
+</html> 

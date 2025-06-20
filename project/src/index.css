@@ -80,3 +80,16 @@
 .hover\:scale-102:hover {
   transform: scale(1.02);
 }
+
+/* Disable text selection globally */
+html, body, #root, * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Playful font family globally */
+html, body {
+  font-family: 'Comic Sans MS', 'Comic Neue', 'Baloo', 'Fredoka', 'Inter', cursive, sans-serif !important;
+}

@@ -9,10 +9,12 @@ import HelpModal from './modals/HelpModal';
 import TimeUpModal from './modals/TimeUpModal';
 import CountdownTimer from './CountdownTimer';
 import TimerBar, { TimerBarHandle } from './TimerBar';
-import { flyerSet, starterAnimals, moverSet } from '../data/animals';
+import { animalsData } from '../data/animals';
 import { flyerColors } from '../data/colors';
-import { MatchedPair, FloatingScore, Player } from '../types/game';
-import { alphabetItems } from '../data/alphabet';
+import { MatchedPair, FloatingScore, Player, QuizItem } from '../types/game';
+import { alphabetData } from '../data/alphabet';
+import { clothesData } from '../data/clothes';
+import { foodData } from '../data/food';
 import { categories } from '../data/categories';
 import { useGame } from '../context/GameContext';
 import { useGameTimer } from '../hooks/useGameTimer';
@@ -50,7 +52,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const [showSpeedBonus, setShowSpeedBonus] = useState(false);
 
   // --- Move these to the top ---
-  const validCategories = ['animals', 'colors', 'alphabet', 'numbers'];
+  const validCategories = ['animals', 'colors', 'alphabet', 'numbers', 'clothes', 'food'];
 
   const match = window.location.pathname.match(/quiz\/(\w+)/);
   const categoryId = match ? match[1] : '';
@@ -72,7 +74,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     // Build items array as before
     let items: any[] = [];
     if (categoryId === 'alphabet') {
-      items = alphabetItems.map(item => ({ ...item, category: '', hex: undefined, image: item.image }));
+      items = alphabetData.starter.map(item => ({ ...item, category: '', hex: undefined, image: item.image }));
     } else if (categoryId === 'colors') {
       const normalizeColor = (item: any) => ({ ...item, category: '', image: item.image ?? undefined, hex: item.hex ?? undefined });
       items = flyerColors.map(normalizeColor); // Use all for Practice Mode
@@ -108,19 +110,60 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         };
       };
       if (difficulty === 'starter') {
-        items = starterAnimals.map(normalizeAnimal);
+        items = animalsData.starter.map(normalizeAnimal);
       } else if (difficulty === 'mover') {
-        items = moverSet.map(normalizeAnimal);
+        items = [...animalsData.starter, ...animalsData.mover].map(normalizeAnimal);
       } else if (difficulty === 'flyer') {
         // Shuffle flyerSet before mapping
-        const shuffledFlyer = shuffleArray(flyerSet);
+        const combinedFlyerSet = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer];
+        const shuffledFlyer = shuffleArray(combinedFlyerSet);
         items = shuffledFlyer.map(normalizeAnimal);
       } else {
-        items = flyerSet.map(normalizeAnimal); // fallback
+        items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(normalizeAnimal); // fallback
+      }
+    } else if (categoryId === 'clothes') {
+      const difficulty = (gameState as any).difficulty || 'starter';
+      const normalizeClothes = (item: { name: string, image: string }) => ({
+        ...item,
+        id: item.name.toLowerCase().replace(/\s+/g, '-'),
+        category: '',
+        hex: undefined,
+      });
+
+      if (difficulty === 'starter') {
+        items = clothesData.starter.map(normalizeClothes);
+      } else if (difficulty === 'mover') {
+        items = [...clothesData.starter, ...clothesData.mover].map(normalizeClothes);
+      } else if (difficulty === 'flyer') {
+        const combinedFlyerSet = [...clothesData.starter, ...clothesData.mover, ...clothesData.flyer];
+        const shuffledFlyer = shuffleArray(combinedFlyerSet);
+        items = shuffledFlyer.map(normalizeClothes);
+      } else {
+        items = [...clothesData.starter, ...clothesData.mover, ...clothesData.flyer].map(normalizeClothes);
+      }
+    } else if (categoryId === 'food') {
+      const difficulty = (gameState as any).difficulty || 'starter';
+      const normalizeFood = (item: { name: string, image: string }) => ({
+        ...item,
+        id: item.name.toLowerCase().replace(/\s+/g, '-'),
+        category: '',
+        hex: undefined,
+      });
+
+      if (difficulty === 'starter') {
+        items = foodData.starter.map(normalizeFood);
+      } else if (difficulty === 'mover') {
+        items = [...foodData.starter, ...foodData.mover].map(normalizeFood);
+      } else if (difficulty === 'flyer') {
+        const combinedFlyerSet = [...foodData.starter, ...foodData.mover, ...foodData.flyer];
+        const shuffledFlyer = shuffleArray(combinedFlyerSet);
+        items = shuffledFlyer.map(normalizeFood);
+      } else {
+        items = [...foodData.starter, ...foodData.mover, ...foodData.flyer].map(normalizeFood);
       }
     } else {
       // fallback
-      items = flyerSet.map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
+      items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
     }
     // Split into sets of 3
     const sets = [];
@@ -206,7 +249,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   }, []);
 
   // --- State for set-based bonus ---
-  const [perfectSetsInARow, setPerfectSetsInARow] = useState(0);
   const [comboMultiplier, setComboMultiplier] = useState(1.0); // starts at 1.0, goes up to 2.5
   const [comboActive, setComboActive] = useState(false);
   const [currentSetMistake, setCurrentSetMistake] = useState(false);
@@ -222,7 +264,7 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const handleDrop = useCallback((zoneId: string, event: React.DragEvent) => {
     event.preventDefault();
     if (!draggedItem || !gameState.isPlaying) return;
-    const item = currentItems.find(item => item.id === draggedItem);
+    const item = currentItems.find((item: QuizItem) => item.id === draggedItem);
     const isCorrect = item?.name === zoneId;
     const now = Date.now();
 
@@ -246,7 +288,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
 
     // Practice Mode scoring
     let points = BASE_POINTS;
-    let speedBonusTriggered = false;
     let speedBonusPoints = 0;
     if (isCorrect) {
       setTotalCorrect(prev => prev + 1);
@@ -264,14 +305,13 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         // Multiply combo-multiplied points for this answer by 1.6 for speed bonus
         speedBonusPoints = Math.round(points * 1.6);
         updateGameState({ score: gameState.score + speedBonusPoints });
-        speedBonusTriggered = true;
         // Floating score for speed bonus
         const rect = event.currentTarget.getBoundingClientRect();
         addFloatingScore(speedBonusPoints, rect.left + rect.width / 2, rect.top - 40);
       } else {
         updateGameState({ score: gameState.score + points });
         // Floating score for normal/correct answer
-        const rect = event.currentTarget.getBoundingClientRect();
+      const rect = event.currentTarget.getBoundingClientRect();
         addFloatingScore(points, rect.left + rect.width / 2, rect.top);
       }
       setMatchedPairs(prev => [...prev, { itemId: draggedItem, zoneId }]);
@@ -287,13 +327,12 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       // Reset combo
       setComboActive(false);
       setComboMultiplier(1.0);
-      setPerfectSetsInARow(0);
       setIncorrectDrop(draggedItem);
       setTimeout(() => setIncorrectDrop(null), 1000);
       setTotalWrong(prev => prev + 1);
       playWrongSound();
       if (timerBarRef.current) timerBarRef.current.subtractTime(7);
-    }
+      }
     setDraggedItem(null);
     setHoveredZone(null);
   }, [draggedItem, gameState.isPlaying, gameState.score, currentItems, addFloatingScore, updateGameState, gameState.mode, timerBarRef, recentCorrectTimestamps, comboActive, comboMultiplier]);
@@ -302,21 +341,10 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   useEffect(() => {
     if (isSetComplete && gameState.mode !== 'timed') {
       if (!currentSetMistake) {
-        setPerfectSetsInARow(prev => {
-          const newStreak = prev + 1;
-          if (newStreak === 3) {
-            setComboActive(true);
-            setComboMultiplier(1.5);
-            setTotalCombos(prev => prev + 1);
-          } else if (newStreak > 3) {
-            setComboActive(true);
-            setComboMultiplier(prevMultiplier => Math.min(prevMultiplier + 0.5, 2.5));
-            setTotalCombos(prev => prev + 1);
-          }
-          return newStreak;
-        });
+        setComboActive(true);
+        setComboMultiplier(1.5);
+        setTotalCombos(prev => prev + 1);
       } else {
-        setPerfectSetsInARow(0);
         setComboActive(false);
         setComboMultiplier(1.0);
       }

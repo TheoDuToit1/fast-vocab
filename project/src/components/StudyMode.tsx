@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Home, ArrowLeft, ArrowRight, Play, Eye, BookOpen, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { starterAnimals, moverAnimals, flyerAnimals, moverSet, flyerSet, dropZones } from '../data/animals';
+import { animalsData } from '../data/animals';
 import { QuizItem } from '../types/game';
-import { alphabetItems } from '../data/alphabet';
-import { starterColors, moverColors, flyerColors, moverSet as colorMoverSet, flyerSet as colorFlyerSet } from '../data/colors';
+import { alphabetData } from '../data/alphabet';
+import { colorsData } from '../data/colors';
+import { clothesData } from '../data/clothes';
+import { foodData } from '../data/food';
 import { generateRandomNumbers, getNumberQuizItem } from '../data/numbers';
 
 interface StudyModeProps {
@@ -41,14 +43,14 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
 
   let allItems: any[] = [];
   if (category === 'alphabet') {
-    allItems = alphabetItems;
+    allItems = alphabetData.starter;
   } else if (category === 'colors') {
     if (difficulty === 'flyer') {
-      allItems = flyerColors;
+      allItems = colorsData.flyer;
     } else if (difficulty === 'mover') {
-      allItems = moverColors;
+      allItems = colorsData.mover;
     } else {
-      allItems = starterColors;
+      allItems = colorsData.starter;
     }
   } else if (category === 'numbers') {
     let digits = 2;
@@ -67,32 +69,33 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
         hex: '#6366f1',
       };
     });
-  } else {
-    // Animals logic as before
-    let animalPaths: string[] = [];
+  } else if (category === 'clothes') {
     if (difficulty === 'flyer') {
-      animalPaths = flyerAnimals;
+      allItems = clothesData.flyer;
     } else if (difficulty === 'mover') {
-      animalPaths = moverAnimals;
+      allItems = clothesData.mover;
     } else {
-      animalPaths = starterAnimals;
+      allItems = clothesData.starter;
     }
-    allItems = animalPaths.map(imgPath => {
-      const fileName = imgPath.split('/').pop() || '';
-      const base = fileName.replace(/\.[^/.]+$/, '');
-      let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      if (/^stingray/i.test(base)) displayName = 'Stingray';
-      else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
-      return {
-        id: base,
-        name: displayName,
-        image: imgPath,
-        category: '',
-      };
-    });
+  } else if (category === 'food') {
+    if (difficulty === 'flyer') {
+      allItems = foodData.flyer;
+    } else if (difficulty === 'mover') {
+      allItems = foodData.mover;
+    } else {
+      allItems = foodData.starter;
+    }
+  } else {
+    // Animals logic
+    if (difficulty === 'flyer') {
+      allItems = animalsData.flyer;
+    } else if (difficulty === 'mover') {
+      allItems = animalsData.mover;
+    } else {
+      allItems = animalsData.starter;
+    }
   }
   const currentItem = allItems[currentItemIndex];
-  const currentCategory = dropZones.find(zone => zone.id === currentItem?.category);
 
   const nextItem = () => {
     if (currentItemIndex < allItems.length - 1) {

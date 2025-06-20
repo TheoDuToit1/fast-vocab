@@ -140,5 +140,12 @@ export const flyerAnimals = [
 ].map(name => `/images/animals/flyer/${name}`);
 
 // Cumulative sets for drag and drop quiz mode
-export const moverSet = [...starterAnimals, ...moverAnimals];
-export const flyerSet = [...starterAnimals, ...moverAnimals, ...flyerAnimals];
+const moverSet = [...starterAnimals, ...moverAnimals];
+const flyerSet = [...starterAnimals, ...moverAnimals, ...flyerAnimals];
+
+export const animalsData = {
+  name: 'Animals',
+  starter: starterAnimals,
+  mover: moverAnimals,
+  flyer: flyerAnimals,
+};

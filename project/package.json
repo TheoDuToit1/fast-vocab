@@ -5,12 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "tts-server": "node tts-server.cjs",
+    "dev:all": "npm-run-all --parallel dev tts-server",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
     "lucide-react": "^0.344.0",
+    "puppeteer": "^24.10.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.1"

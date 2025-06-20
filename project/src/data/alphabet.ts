@@ -10,11 +10,17 @@ const alphabetFilenames = [
   'z-3479532.png'
 ];
 
-export const alphabetItems = alphabetFilenames.map(filename => {
+const alphabetItems = alphabetFilenames.map(filename => {
   const letter = filename[0];
   return {
-    id: letter,
-    name: letter,
+    name: letter.toUpperCase(),
     image: `/images/alphabet/${filename}`
   };
-}); 
+});
+
+export const alphabetData = {
+  name: 'Alphabet',
+  starter: alphabetItems,
+  mover: [],
+  flyer: [],
+}; 

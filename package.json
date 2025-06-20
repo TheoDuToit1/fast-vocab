@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "tts-server": "node ../../tts-server.js",
+    "dev:all": "npm-run-all --parallel dev tts-server"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {
+    "cors": "^2.8.5"
+  }
+}

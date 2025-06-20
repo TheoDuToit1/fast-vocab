@@ -23,6 +23,8 @@ const categories = [
   categoriesData.colors,
   categoriesData.alphabet,
   categoriesData.numbers,
+  categoriesData.clothes,
+  categoriesData.food,
 ];
 
 const CategoryPage: React.FC = () => {
@@ -108,11 +110,19 @@ const CategoryPage: React.FC = () => {
               onClick={() => handleCategorySelect(category.id)}
               className="group relative cursor-pointer transform hover:scale-105 transition-all duration-300"
             >
-              {/* Glow Effect */}
-              <div className={`absolute inset-0 bg-gradient-to-r ${category.color} rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-300`}></div>
-              
+              {/* Vibrant Animated Glow */}
+              <div className={`absolute -inset-2 bg-gradient-to-br ${category.id === 'animals'
+                ? 'from-green-300 via-emerald-400 to-green-500'
+                : category.id === 'colors'
+                ? 'from-pink-300 via-rose-400 to-pink-500'
+                : category.id === 'clothes'
+                ? 'from-purple-300 via-violet-400 to-purple-500'
+                : category.id === 'food'
+                ? 'from-red-300 via-yellow-400 to-red-500'
+                : 'from-yellow-300 via-orange-400 to-yellow-500'}
+                rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 animate-pulse pointer-events-none z-0 transition-all duration-500`}></div>
               {/* Card */}
-              <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl border border-white/20 hover:shadow-2xl transition-all duration-300">
+              <div className="relative bg-white/70 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-300 z-10 group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-green-200/60">
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
                   <img
@@ -120,38 +130,54 @@ const CategoryPage: React.FC = () => {
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-20`}></div>
-                  
-                  {/* Icon Overlay */}
-                  <div className="absolute top-4 right-4 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-2xl">
+                  <div className={`absolute inset-0 bg-gradient-to-t ${category.id === 'animals'
+                    ? 'from-green-400/30 to-transparent'
+                    : category.id === 'colors'
+                    ? 'from-pink-400/30 to-transparent'
+                    : category.id === 'clothes'
+                    ? 'from-purple-400/30 to-transparent'
+                    : category.id === 'food'
+                    ? 'from-red-400/30 to-transparent'
+                    : 'from-yellow-400/30 to-transparent'} opacity-40`}></div>
+                  {/* Animated Icon Badge */}
+                  <div className="absolute top-4 right-4 w-14 h-14 bg-white/90 rounded-full flex items-center justify-center text-3xl shadow-xl group-hover:animate-bounce group-hover:scale-110 transition-all duration-300 border-2 border-white">
                     {category.icon}
                   </div>
-                  
-                  {/* Difficulty Badge */}
+                  {/* Prominent Item Count Badge */}
+                  <div className="absolute bottom-4 left-4 px-4 py-1 rounded-full text-base font-bold bg-white/90 text-gray-700 shadow-md border border-gray-200">
+                    {category.itemCount} items
+                  </div>
+                  {/* Difficulty Badge (if any) */}
                   {category.difficulty && (
-                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(category.difficulty)}`}>
+                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-semibold ${getDifficultyColor(category.difficulty)}`}> 
                       {category.difficulty}
                     </div>
                   )}
                 </div>
-
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-7">
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold text-gray-800">{category.name}</h2>
-                    <span className="text-sm text-gray-500">{category.itemCount} items</span>
+                    <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight font-[Comic_Sans_MS,Comic_Neue,cursive,Inter,sans-serif] drop-shadow-sm">
+                      {category.name}
+                    </h2>
                   </div>
-                  <p className="text-gray-600 mb-4">{category.description}</p>
+                  <p className="text-gray-600 mb-6 text-lg font-medium">{category.description}</p>
                   <button
-                    className={`w-full py-3 rounded-xl font-semibold text-white transition-colors ${
-                      category.id === 'animals'
-                        ? 'bg-gradient-to-r from-green-400 to-emerald-500'
+                    className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2
+                      bg-gradient-to-r
+                      ${category.id === 'animals'
+                        ? 'from-green-400 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-green-400'
                         : category.id === 'colors'
-                        ? 'bg-gradient-to-r from-pink-400 to-rose-500'
-                        : 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                    }`}
+                        ? 'from-pink-400 via-rose-500 to-pink-600 hover:from-rose-500 hover:to-pink-400'
+                        : category.id === 'clothes'
+                        ? 'from-purple-400 via-violet-500 to-purple-600 hover:from-violet-500 hover:to-purple-400'
+                        : category.id === 'food'
+                        ? 'from-red-400 via-yellow-500 to-red-600 hover:from-yellow-500 hover:to-red-400'
+                        : 'from-yellow-400 via-orange-500 to-yellow-600 hover:from-orange-500 hover:to-yellow-400'}
+                      hover:scale-105 hover:shadow-2xl animate-gradient-x bg-[length:200%_200%] bg-left hover:bg-right
+                    `}
                   >
-                    <Play className="inline w-5 h-5 mr-2" /> Start Learning
+                    <Play className="inline w-6 h-6 mr-2" /> Start Learning
                   </button>
                 </div>
               </div>
