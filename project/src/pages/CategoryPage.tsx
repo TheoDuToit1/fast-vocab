@@ -68,7 +68,7 @@ const CategoryPage: React.FC = () => {
       case 'food':
         return '/images/foods/starter/ice-cream.png';
       case 'classroom':
-        return '/images/classroom/starter/classroom.png';
+        return '/images/classroom/starter/whiteboard.png';
       default:
         return '/images/animals/starter/tiger-3065741.png'; // Default fallback
     }

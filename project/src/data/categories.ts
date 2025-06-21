@@ -97,7 +97,7 @@ export const categories: CategoryInfo[] = [
     description: 'Learn about items in the classroom!',
     icon: '📚',
     color: 'bg-yellow-200',
-    image: '/images/classroom/starter/classroom.png',
+    image: '/images/classroom/starter/whiteboard.png',
     itemCount: classroom.items.length,
   },
 ];

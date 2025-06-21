@@ -15,7 +15,6 @@ export const classroom: Category = {
     { name: 'eraser', image: imagePath('eraser.png') },
     { name: 'notebook', image: imagePath('notebook.png') },
     { name: 'book', image: imagePath('book.png') },
-    { name: 'classroom', image: imagePath('classroom.png') },
     { name: 'whiteboard', image: imagePath('whiteboard.png') },
     { name: 'school bell', image: imagePath('bell.png') },
     { name: 'backpack', image: imagePath('backpack.png') },

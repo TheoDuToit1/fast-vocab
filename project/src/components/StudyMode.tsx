@@ -30,9 +30,13 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [difficulty, setDifficulty] = useState<'starter' | 'mover' | 'flyer'>('starter');
   const [animDirection, setAnimDirection] = useState<'left' | 'right' | null>(null);
+  const [isFading, setIsFading] = useState(false);
   const [showDifficultyModal, setShowDifficultyModal] = useState(true);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [isFading, setIsFading] = useState(false);
+  
+  // Animation timing constants
+  const FADE_OUT_DURATION = 300; // ms
+  const ITEM_CHANGE_DELAY = 50; // ms
 
   // Voice selection logic (match Quiz exactly)
   useEffect(() => {
@@ -135,9 +139,10 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
       setIsFading(true);
       setTimeout(() => {
         setCurrentItemIndex(currentItemIndex + 1);
-        setIsFading(false);
-        setAnimDirection(null);
-      }, 400); // 400ms for a smoother effect
+        setTimeout(() => {
+          setIsFading(false);
+        }, ITEM_CHANGE_DELAY);
+      }, FADE_OUT_DURATION);
     }
   };
 
@@ -147,9 +152,10 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
       setIsFading(true);
       setTimeout(() => {
         setCurrentItemIndex(currentItemIndex - 1);
-        setIsFading(false);
-        setAnimDirection(null);
-      }, 400);
+        setTimeout(() => {
+          setIsFading(false);
+        }, ITEM_CHANGE_DELAY);
+      }, FADE_OUT_DURATION);
     }
   };
 
@@ -239,11 +245,11 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
                   <ArrowLeft className="w-7 h-7" />
                 </button>
                 <div className={`relative w-48 h-48 sm:w-64 sm:h-64 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center bg-white mx-auto
-                  transition-all duration-400
-                  ${isFading && animDirection === 'right' ? 'opacity-0 -translate-x-10' : ''}
-                  ${isFading && animDirection === 'left' ? 'opacity-0 translate-x-10' : ''}
-                  ${!isFading && animDirection === 'right' ? 'opacity-100 translate-x-10' : ''}
-                  ${!isFading && animDirection === 'left' ? 'opacity-100 -translate-x-10' : ''}
+                  transform transition-all duration-300 ease-in-out
+                  ${isFading && animDirection === 'right' ? 'opacity-0 -translate-x-20' : ''}
+                  ${isFading && animDirection === 'left' ? 'opacity-0 translate-x-20' : ''}
+                  ${!isFading && animDirection === 'right' ? 'opacity-100 translate-x-0' : ''}
+                  ${!isFading && animDirection === 'left' ? 'opacity-100 translate-x-0' : ''}
                   ${!isFading && !animDirection ? 'opacity-100 translate-x-0' : ''}
                 `}>
                   {currentItem.image ? (
@@ -291,7 +297,10 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
                 </div>
                 {/* Name under main picture for all study modes - moved down, white background */}
                 <div className="mt-6 sm:mt-12 flex justify-center">
-                  <div className="bg-white rounded-xl px-4 py-2 sm:px-8 sm:py-4 shadow-lg text-lg sm:text-2xl font-bold text-gray-700 select-none inline-block">
+                  <div className={`bg-white rounded-xl px-4 py-2 sm:px-8 sm:py-4 shadow-lg text-lg sm:text-2xl font-bold text-gray-700 select-none inline-block
+                    transform transition-all duration-300 ease-in-out
+                    ${isFading ? 'opacity-0' : 'opacity-100'}
+                  `}>
                     {currentItem.name}
                   </div>
                 </div>
@@ -373,7 +382,20 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, catego
                       return (
                         <button
                           key={idx}
-                          onClick={() => setCurrentItemIndex(Number(idx))}
+                          onClick={() => {
+                            if (Number(idx) !== current) {
+                              // Set animation direction based on target position
+                              const newDirection = Number(idx) > current ? 'right' : 'left';
+                              setAnimDirection(newDirection);
+                              setIsFading(true);
+                              setTimeout(() => {
+                                setCurrentItemIndex(Number(idx));
+                                setTimeout(() => {
+                                  setIsFading(false);
+                                }, ITEM_CHANGE_DELAY);
+                              }, FADE_OUT_DURATION);
+                            }
+                          }}
                           className={`transition-all duration-200 flex items-center justify-center
                             ${isActive ? 'w-10 h-10 sm:w-12 sm:h-12 bg-green-500 text-white shadow-lg ring-4 ring-green-200 scale-110 z-20' : 'w-5 h-5 bg-white border-2 border-green-300 text-green-600 z-10'}
                             rounded-full font-bold mx-1 focus:outline-none focus:ring-2 focus:ring-green-400
