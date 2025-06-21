@@ -775,12 +775,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             <Home className="w-6 h-6 text-blue-600" />
           </button>
           <span className="text-4xl font-bold text-purple-600 flex items-center gap-2">
-            <div className="top-3 left-3 absolute flex flex-col items-start z-30">
-              <div className="flex items-center bg-white rounded-lg px-4 py-2 shadow-lg font-bold text-xl gap-2 border-2 hover:scale-105 transition-transform">
-                <span className="text-3xl">{categories.find(cat => cat.id === categoryId)?.icon || '🎮'}</span>
-                {categories.find(cat => cat.id === categoryId)?.name || 'Quiz'}
-              </div>
-            </div>
           </span>
         </div>
 
