@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Home, ArrowLeft, ArrowRight, Play, Eye, BookOpen, Volume2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { animalsData } from '../data/animals';
-import { QuizItem } from '../types/game';
 import { alphabetData } from '../data/alphabet';
-import { colorsData } from '../data/colors';
 import { clothesData } from '../data/clothes';
+import { colorsData } from '../data/colors';
 import { foodData } from '../data/food';
 import { generateRandomNumbers, getNumberQuizItem } from '../data/numbers';
+import { getCategory } from '../data/categories';
+import { Category, Item, QuizItem } from '../types/game';
 
 interface StudyModeProps {
   onBackToHome: () => void;
   onStartQuiz: () => void;
+  categoryIdProp?: string;
 }
 
-const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
+const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz, categoryIdProp }) => {
   const navigate = useNavigate();
+  const { categoryId: categoryIdFromUrl } = useParams<{ categoryId: string }>();
+  
+  // Use prop if provided, otherwise use URL param, fall back to 'animals' if neither exists
+  const categoryId = categoryIdProp || categoryIdFromUrl || 'animals';
+  
+  const category = getCategory(categoryId as any);
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
@@ -37,7 +45,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
       ];
       let enVoice = availableVoices.find(v => preferredNames.includes(v.name));
       if (!enVoice) {
-        enVoice = availableVoices.find(v => v.lang.startsWith('en') && v.gender === 'female');
+        enVoice = availableVoices.find(v => v.lang.startsWith('en'));
       }
       if (!enVoice) {
         enVoice = availableVoices.find(v => v.lang.startsWith('en'));
@@ -51,113 +59,78 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
     };
   }, []);
 
-  // Determine category from URL path
-  const pathParts = window.location.pathname.split('/');
-  const category = pathParts[pathParts.length - 1] || '';
+  // Process items based on the category structure
+  const [items, setItems] = useState<{ name: string; image: string }[]>([]);
+  
+  useEffect(() => {
+    let processedItems: { name: string; image: string }[] = [];
+    
+    try {
+      console.log("Processing category:", categoryId, category);
+      
+      if (!category) {
+        console.error("Category is undefined");
+        setItems([]);
+        return;
+      }
+      
+      // New category structure (classroom)
+      if ('items' in category) {
+        processedItems = category.items.map((item: {name: string; image: string}) => ({
+          name: item.name,
+          image: item.image
+        }));
+        console.log("Using new category structure:", processedItems);
+      } 
+      // Old category structure (animals, alphabet, etc.)
+      else if (category.starter) {
+        // Handle animals structure (each item might be a string path or an object)
+        processedItems = category.starter.map((item: any) => {
+          if (typeof item === 'string') {
+            // Handle path strings (mainly animals)
+            const fileName = item.split('/').pop() || '';
+            const baseName = fileName.replace(/\.[^/.]+$/, '').replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ');
+            const displayName = baseName.replace(/\b\w/g, (c: string) => c.toUpperCase());
+            return { name: displayName, image: item };
+          } else if (item && typeof item === 'object') {
+            // Handle objects (other categories)
+            const name = item.name || 'Unknown';
+            
+            // Check if the item already has a complete image path
+            let imagePath = item.image;
+            
+            if (!imagePath && item.id) {
+              // Build the path if not provided
+              imagePath = `/images/${categoryId}/starter/${item.id}.png`;
+            }
+            
+            return { name, image: imagePath };
+          }
+          
+          return { name: 'Unknown item', image: '' };
+        });
+        console.log("Using old category structure:", processedItems);
+      } else {
+        console.error("Unknown category structure:", category);
+      }
+      
+      // Ensure we limit to 12 items for all categories
+      if (processedItems.length > 12) {
+        processedItems = processedItems.slice(0, 12);
+      }
+      
+      console.log("Final processed items:", processedItems);
+      setItems(processedItems);
+    } catch (error) {
+      console.error("Error processing category items:", error);
+      setItems([]);
+    }
+  }, [categoryId, category, difficulty]);
 
-  let allItems: any[] = [];
-  if (category === 'alphabet') {
-    allItems = alphabetData.starter;
-  } else if (category === 'colors') {
-    // Define color sets
-    const starterColors = [
-      { name: 'Red', image: '#FF0000' },
-      { name: 'Blue', image: '#0000FF' },
-      { name: 'Yellow', image: '#FFFF00' },
-      { name: 'Green', image: '#008000' },
-      { name: 'Orange', image: '#FFA500' },
-      { name: 'Purple', image: '#800080' },
-      { name: 'Pink', image: '#FFC0CB' },
-      { name: 'Brown', image: '#A52A2A' },
-      { name: 'Black', image: '#000000' },
-      { name: 'White', image: '#FFFFFF' },
-    ];
-    const moverColors = [
-      { name: 'Gray', image: '#808080' },
-      { name: 'Cyan', image: '#00FFFF' },
-      { name: 'Magenta', image: '#FF00FF' },
-      { name: 'Lime', image: '#00FF00' },
-      { name: 'Navy', image: '#000080' },
-      { name: 'Teal', image: '#008080' },
-      { name: 'Maroon', image: '#800000' },
-      { name: 'Olive', image: '#808000' },
-      { name: 'Gold', image: '#FFD700' },
-      { name: 'Silver', image: '#C0C0C0' },
-    ];
-    const flyerColors = [
-      { name: 'Violet', image: '#EE82EE' },
-      { name: 'Indigo', image: '#4B0082' },
-      { name: 'Coral', image: '#FF7F50' },
-      { name: 'Turquoise', image: '#40E0D0' },
-      { name: 'Beige', image: '#F5F5DC' },
-      { name: 'Peach', image: '#FFDAB9' },
-      { name: 'Mint', image: '#98FF98' },
-      { name: 'Lavender', image: '#E6E6FA' },
-      { name: 'Aqua', image: '#00FFFF' },
-      { name: 'Chocolate', image: '#D2691E' },
-    ];
-    if (difficulty === 'starter') {
-      allItems = starterColors;
-    } else if (difficulty === 'mover') {
-      allItems = [...starterColors, ...moverColors];
-    } else {
-      allItems = [...starterColors, ...moverColors, ...flyerColors];
-    }
-  } else if (category === 'numbers') {
-    let digits = 2;
-    if (difficulty === 'flyer') digits = 4;
-    else if (difficulty === 'mover') digits = 3;
-    else digits = 2;
-    const nums = generateRandomNumbers(40, digits);
-    allItems = nums.map(n => {
-      const quizItem = getNumberQuizItem(n);
-      return {
-        id: quizItem.id,
-        name: quizItem.word,
-        value: quizItem.value,
-        display: quizItem.value,
-        word: quizItem.word,
-        hex: '#6366f1',
-      };
-    });
-  } else if (category === 'clothes') {
-    if (difficulty === 'flyer') {
-      allItems = clothesData.flyer;
-    } else if (difficulty === 'mover') {
-      allItems = clothesData.mover;
-    } else {
-      allItems = clothesData.starter;
-    }
-  } else if (category === 'food') {
-    if (difficulty === 'flyer') {
-      allItems = foodData.flyer;
-    } else if (difficulty === 'mover') {
-      allItems = foodData.mover;
-    } else {
-      allItems = foodData.starter;
-    }
-  } else if (category === 'animals') {
-    const animalMap = (imgPath: string) => {
-      const fileName = imgPath.split('/').pop() || '';
-      const base = fileName.replace(/\.[^/.]+$/, '');
-      let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      return { name: displayName, image: imgPath };
-    };
-    if (difficulty === 'flyer') {
-      allItems = animalsData.flyer.map(animalMap);
-    } else if (difficulty === 'mover') {
-      allItems = animalsData.mover.map(animalMap);
-    } else {
-      allItems = animalsData.starter.map(animalMap);
-    }
-  } else {
-    // Default fallback
-    allItems = [];
-  }
-  const currentItem = allItems[currentItemIndex];
+  const currentItem = items[currentItemIndex] || { name: "Item not found", image: "" };
 
   const nextItem = () => {
-    if (currentItemIndex < allItems.length - 1 && !isFading) {
+    if (currentItemIndex < items.length - 1 && !isFading) {
       setAnimDirection('right');
       setIsFading(true);
       setTimeout(() => {
@@ -186,7 +159,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
   };
 
   // Carousel logic for navigation
-  const total = allItems.length;
+  const total = items.length;
   const current = currentItemIndex;
 
   return (
@@ -211,7 +184,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
         {/* Center: Counter and Audio */}
         <div className="flex flex-row items-center gap-2 w-full sm:w-auto justify-center mb-2 sm:mb-0">
           <div className="bg-green-100 text-green-800 px-3 py-1 sm:px-4 sm:py-2 rounded-full font-semibold text-sm sm:text-base">
-            {currentItemIndex + 1} of {allItems.length}
+            {currentItemIndex + 1} of {total}
           </div>
           <button
             onClick={() => setAudioEnabled(a => !a)}
@@ -273,27 +246,17 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                   ${!isFading && animDirection === 'left' ? 'opacity-100 -translate-x-10' : ''}
                   ${!isFading && !animDirection ? 'opacity-100 translate-x-0' : ''}
                 `}>
-                  {category === 'colors' ? (
-                    <div
-                      className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-gray-200 mx-auto"
-                      style={{ background: currentItem.image }}
-                    />
-                  ) : category === 'numbers' ? (
-                    <div className="flex flex-col items-center justify-center w-full h-full">
-                      <span
-                        className="text-5xl sm:text-7xl font-extrabold mb-2 sm:mb-4 select-none"
-                        style={{ color: currentItem.hex || '#6366f1', fontFamily: 'Comic Sans MS, Comic Neue, cursive, Inter, sans-serif' }}
-                      >
-                        {currentItem.display}
-                      </span>
-                      <span className="text-lg sm:text-xl font-medium text-gray-600 mt-1 sm:mt-2">{currentItem.word}</span>
-                    </div>
-                  ) : (
+                  {currentItem.image ? (
                     <img
                       src={currentItem.image}
                       alt={currentItem.name}
                       className="w-full h-full max-w-[12rem] max-h-[12rem] sm:max-w-full sm:max-h-full object-contain sm:object-cover"
                     />
+                  ) : (
+                    <div className="text-center p-4 bg-gray-100 rounded">
+                      <p className="text-gray-500">No image available</p>
+                      <p className="text-xl font-bold mt-2">{currentItem.name}</p>
+                    </div>
                   )}
                   {/* Speaker Button - moved up */}
                   <button
@@ -329,13 +292,13 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
                 {/* Name under main picture for all study modes - moved down, white background */}
                 <div className="mt-6 sm:mt-12 flex justify-center">
                   <div className="bg-white rounded-xl px-4 py-2 sm:px-8 sm:py-4 shadow-lg text-lg sm:text-2xl font-bold text-gray-700 select-none inline-block">
-                    {category === 'numbers' ? currentItem.word : currentItem.name}
+                    {currentItem.name}
                   </div>
                 </div>
                 {/* Mobile right arrow */}
                 <button
                   onClick={nextItem}
-                  disabled={currentItemIndex === allItems.length - 1}
+                  disabled={currentItemIndex === total - 1}
                   className="sm:hidden absolute right-[-0.5rem] top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10"
                   aria-label="Next"
                   style={{ right: '-0.5rem' }}
@@ -346,7 +309,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
               {/* Right Arrow (desktop) */}
               <button
                 onClick={nextItem}
-                disabled={currentItemIndex === allItems.length - 1}
+                disabled={currentItemIndex === total - 1}
                 className="hidden sm:flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed mb-2 sm:mb-0"
                 aria-label="Next"
               >
@@ -432,7 +395,7 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
 
             <button
               onClick={nextItem}
-              disabled={currentItemIndex === allItems.length - 1}
+              disabled={currentItemIndex === total - 1}
               className="hidden sm:flex items-center gap-2 bg-green-100 text-green-600 px-4 py-2 sm:px-6 sm:py-3 rounded-xl font-semibold hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto mt-2 sm:mt-0"
             >
               Next
@@ -498,17 +461,8 @@ const StudyMode: React.FC<StudyModeProps> = ({ onBackToHome, onStartQuiz }) => {
             >
               ×
             </button>
-            {category === 'colors' ? (
-              <div className="w-72 h-72 rounded-full border-4 border-gray-200 mb-6" style={{ background: currentItem.image }} />
-            ) : category === 'numbers' ? (
-              <div className="flex flex-col items-center justify-center w-72 h-72 mb-6">
-                <span className="text-8xl font-extrabold select-none" style={{ color: currentItem.hex || '#6366f1', fontFamily: 'Comic Sans MS, Comic Neue, cursive, Inter, sans-serif' }}>{currentItem.display}</span>
-                <span className="text-2xl font-medium text-gray-600 mt-4">{currentItem.word}</span>
-              </div>
-            ) : (
-              <img src={currentItem.image} alt={currentItem.name} className="w-72 h-72 object-cover rounded-2xl mb-6" />
-            )}
-            <div className="text-3xl font-bold text-gray-700 text-center">{category === 'numbers' ? currentItem.word : currentItem.name}</div>
+            <img src={currentItem.image} alt={currentItem.name} className="w-72 h-72 object-cover rounded-2xl mb-6" />
+            <div className="text-3xl font-bold text-gray-700 text-center">{currentItem.name}</div>
           </div>
         </div>
       )}

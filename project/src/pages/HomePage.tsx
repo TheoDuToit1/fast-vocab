@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Trophy, HelpCircle, Volume2, Star, Zap, Target, BookOpen, Globe, Gamepad2, Eye } from 'lucide-react';
+import { Play, Trophy, HelpCircle, Volume2, Star, Zap, Target, BookOpen, Globe, Gamepad2, Eye, Settings } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import HelpModal from '../components/modals/HelpModal';
 import { categories } from '../data/categories';
@@ -244,6 +244,13 @@ const HomePage: React.FC = () => {
           <button className="flex items-center gap-3 bg-white/80 backdrop-blur-2xl text-gray-700 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white transition-colors shadow-xl">
             <Volume2 className="w-6 h-6" />
             Sound Settings
+          </button>
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+          >
+            <Settings className="w-6 h-6" />
+            Admin Panel
           </button>
         </div>
       </div>

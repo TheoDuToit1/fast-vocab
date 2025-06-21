@@ -6,6 +6,7 @@ export type NumberQuizItem = {
   digits: number[]; // e.g. [2,3]
   images: string[]; // e.g. ['/images/numbers/two-3479571.png', '/images/numbers/three-3479580.png']
   word: string; // e.g. 'twenty-three'
+  image?: string; // SVG representation
 };
 
 const digitMap: { [digit: number]: { name: string; image: string } } = {
@@ -77,12 +78,17 @@ export function getNumberQuizItem(n: number): NumberQuizItem {
     image = `/images/numbers/${n}-`;
   }
   // Since the filenames have a hash, we'll match by prefix in the component
+  
+  // Generate SVG representation for the number
+  const svgImage = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="100%" height="100%" fill="%232779BD" rx="10" ry="10" /><text x="50%" y="50%" font-family="Arial" font-size="80" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${n}</text></svg>`;
+  
   return {
     id: n.toString(),
     value: n,
     digits: n.toString().split('').map(Number),
     images: [image],
     word: numberToWords(n),
+    image: svgImage,
   };
 }
 
@@ -98,15 +104,20 @@ export function generateRandomNumbers(count: number, digits: number): number[] {
 }
 
 const starterNumbers = [
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 40, 50, 60, 70, 80, 90, 100
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 ];
 
 export const numbersData = {
   name: 'Numbers',
-  starter: starterNumbers.map(n => ({
-    name: numberToWords(n),
-    image: `/images/numbers/${numberToWordFilename(n)}.png` // Assuming filenames match this pattern
-  })),
+  starter: starterNumbers.map(n => {
+    const svgImage = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="100%" height="100%" fill="%232779BD" rx="10" ry="10" /><text x="50%" y="50%" font-family="Arial" font-size="80" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${n}</text></svg>`;
+    
+    return {
+      id: n.toString(),
+      name: numberToWords(n),
+      image: svgImage
+    };
+  }),
   mover: [], // Mover numbers can be added here
   flyer: [], // Flyer numbers can be added here
 }; 

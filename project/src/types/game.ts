@@ -57,3 +57,16 @@ export interface GameState {
   gameSessionId?: number;
   difficulty?: GameDifficulty;
 }
+
+export interface Item {
+  id?: string;
+  name: string;
+  image: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  isVocalized: boolean;
+  items: Item[];
+}

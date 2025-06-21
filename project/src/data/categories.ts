@@ -1,25 +1,26 @@
-import { numbersData } from './numbers';
-import { clothesData } from './clothes';
 import { alphabetData } from './alphabet';
-import { colorsData } from './colors';
 import { animalsData } from './animals';
+import { clothesData } from './clothes';
+import { colorsData } from './colors';
 import { foodData } from './food';
+import { numbersData } from './numbers';
+import { classroom } from './classroom';
+import { Category } from '../types/game';
 
-export interface CategoryData {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  sets: any[][];
-  dropZones: any[];
-  numbers: numbersData;
-  clothes: clothesData;
-  food: foodData;
-}
+export const categoryData = {
+  animals: animalsData,
+  clothes: clothesData,
+  alphabet: alphabetData,
+  numbers: numbersData,
+  colors: colorsData,
+  food: foodData,
+  classroom: classroom,
+};
 
-interface CategoryInfo {
-  id: string;
+export type CategoryId = keyof typeof categoryData;
+
+export interface CategoryInfo {
+  id: CategoryId;
   name: string;
   description: string;
   icon: string;
@@ -28,72 +29,88 @@ interface CategoryInfo {
   itemCount: number;
 }
 
-const categoryData = {
-  animals: animalsData,
-  colors: colorsData,
-  alphabet: alphabetData,
-  numbers: numbersData,
-  clothes: clothesData,
-  food: foodData,
-};
-
-export const categories: Record<string, CategoryInfo> = {
-  animals: {
+export const categories: CategoryInfo[] = [
+  {
     id: 'animals',
     name: 'Animals',
-    description: 'Learn about different animals and their categories',
-    icon: '🐾',
-    color: 'from-green-400 to-emerald-500',
-    image: 'https://wallpapers.com/images/featured/cute-animal-anime-e5b9oin5itw8sczg.jpg',
-    itemCount: categoryData.animals.starter.length + categoryData.animals.mover.length + categoryData.animals.flyer.length,
+    description: 'Learn the names of animals!',
+    icon: '🦓',
+    color: 'bg-orange-200',
+    image: '/images/animals/starter/tiger-3065741.png',
+    itemCount:
+      animalsData.starter.length +
+      animalsData.mover.length +
+      animalsData.flyer.length,
   },
-  colors: {
-    id: 'colors',
-    name: 'Colors',
-    description: 'Match objects with their colors',
-    icon: '🎨',
-    color: 'from-pink-400 to-rose-500',
-    image: 'https://play-lh.googleusercontent.com/3V6kJrho6qWXnWAW1n99ET-1KAlU9V9DnHHACN-Ec6ItbAKCy2vt0kTS8xkIkCDdkA=w526-h296-rw',
-    itemCount: categoryData.colors.starter.length + categoryData.colors.mover.length + categoryData.colors.flyer.length,
-  },
-  alphabet: {
-    id: 'alphabet',
-    name: 'Alphabet',
-    description: 'Learn and match the English alphabet',
-    icon: '🔤',
-    color: 'from-yellow-400 to-orange-500',
-    image: 'https://cdn.pixabay.com/video/2017/01/26/7529-201118756_tiny.jpg',
-    itemCount: categoryData.alphabet.starter.length,
-  },
-  numbers: {
-    id: 'numbers',
-    name: 'Numbers',
-    description: 'Match numbers to their English words',
-    icon: '🔢',
-    color: 'from-blue-400 to-indigo-500',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMI3Njzx2NMY8pZZpRdsEtOuP8jVz_JtVjbA&s',
-    itemCount: categoryData.numbers.starter.length,
-  },
-  clothes: {
+  {
     id: 'clothes',
     name: 'Clothes',
-    description: 'Explore different types of clothing',
+    description: 'Learn the names of clothes!',
     icon: '👕',
-    color: 'from-purple-400 to-violet-500',
-    image: 'https://www.animestreetstyle.com/cdn/shop/files/Untitled_design_36_1.png?v=1689344413',
-    itemCount: categoryData.clothes.starter.length + categoryData.clothes.mover.length + categoryData.clothes.flyer.length,
+    color: 'bg-blue-200',
+    image: '/images/clothes/starter/t-shirt.png',
+    itemCount:
+      clothesData.starter.length +
+      clothesData.mover.length +
+      clothesData.flyer.length,
   },
-  food: {
+  {
+    id: 'alphabet',
+    name: 'Alphabet',
+    description: 'Learn the letters of the alphabet!',
+    icon: '🔤',
+    color: 'bg-red-200',
+    image: '/images/alphabet/a-3479391.png',
+    itemCount: alphabetData.starter.length,
+  },
+  {
+    id: 'numbers',
+    name: 'Numbers',
+    description: 'Learn to count!',
+    icon: '🔢',
+    color: 'bg-green-200',
+    image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%2348bb78"/><text x="50%" y="50%" font-family="Arial" font-size="72" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">123</text></svg>',
+    itemCount: numbersData.starter.length,
+  },
+  {
+    id: 'colors',
+    name: 'Colors',
+    description: 'Learn the names of colors!',
+    icon: '🎨',
+    color: 'bg-purple-200',
+    image: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100" height="100" x="20" y="100" fill="%23ff0000"/><rect width="100" height="100" x="150" y="100" fill="%230000ff"/><rect width="100" height="100" x="280" y="100" fill="%2300ff00"/></svg>',
+    itemCount: colorsData.starter.length,
+  },
+  {
     id: 'food',
     name: 'Food',
-    description: 'Learn about different kinds of food',
-    icon: '🍔',
-    color: 'from-red-400 to-yellow-500',
-    image: 'https://static1.cbrimages.com/wordpress/wp-content/uploads/2023/08/f3.jpg',
-    itemCount: foodData.starter.length + foodData.mover.length + foodData.flyer.length,
+    description: 'Learn the names of food!',
+    icon: '🍕',
+    color: 'bg-pink-200',
+    image: '/images/foods/starter/pizza-1725716.png',
+    itemCount:
+      foodData.starter.length + foodData.mover.length + foodData.flyer.length,
   },
-};
+  {
+    id: 'classroom',
+    name: 'Classroom',
+    description: 'Learn about items in the classroom!',
+    icon: '📚',
+    color: 'bg-yellow-200',
+    image: '/images/classroom/starter/classroom.png',
+    itemCount: classroom.items.length,
+  },
+];
 
-export function getCategoryData(category: string) {
-  return categoryData[category as keyof typeof categoryData];
+export function getCategory(
+  category: CategoryId
+): any {
+  const result = categoryData[category];
+  return result;
+}
+
+export interface CategoryData {
+  starter: { id: string; name: string }[];
+  mover: { id: string; name: string }[];
+  flyer: { id: string; name: string }[];
 }

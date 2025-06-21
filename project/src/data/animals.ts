@@ -1,4 +1,5 @@
 import { QuizItem, DropZoneData } from '../types/game';
+import { CategoryData } from '../types/game';
 
 // Drop zones match the categories used in the animal objects above
 export const dropZones: DropZoneData[] = [
@@ -7,52 +8,45 @@ export const dropZones: DropZoneData[] = [
   { id: 'wild', label: 'Wild', color: 'from-orange-400 to-red-500' }
 ];
 
+// Helper function to get display name from image path
+const getDisplayName = (imagePath: string) => {
+  const fileName = imagePath.split('/').pop() || '';
+  const base = fileName.replace(/\.[^/.]+$/, '');
+  let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  
+  // Special cases
+  if (imagePath.includes('parrot') || imagePath.includes('bird')) displayName = 'Bird';
+  else if (/stingray/i.test(base)) displayName = 'Stingray';
+  else if (/seahorse/i.test(base)) displayName = 'Seahorse';
+  else if (/panda-bear/i.test(base) || imagePath.includes('panda')) displayName = 'Panda';
+  
+  return displayName;
+};
+
 // Starter (was easy)
-export const starterAnimals = [
-  'mouse-1067852.png',
-  'frog-1067846.png',
-  'parrot-1864474.png',
-  'rabbit-1067831.png',
-  'fish-1067826.png',
-  'turtle-1067822.png',
-  'hamster-1067820.png',
-  'dog-1067817.png',
-  'cat-1067809.png',
-  'duck-1449800.png',
-  'cow-1449793.png',
-  'chicken-1449791.png',
-  'bee-1864595.png',
-  'sheep-1864535.png',
-  'dog-1864532.png',
-  'owl-1864521.png',
-  'panda-1864516.png',
-  'cat-1864514.png',
-  'duck-1864493.png',
-  'rabbit-1864488.png',
-  'horse-1864486.png',
-  'snail-1864485.png',
-  'fish-1864484.png',
-  'monkey-1864483.png',
-  'crab-1864481.png',
-  'whale-3065742.png',
-  'zebra-3065747.png',
-  'wolf-3065743.png',
-  'starfish-3065740.png',
-  'tiger-3065741.png',
-  'snake-3065738.png',
-  'seal-3065736.png',
-  'octopus-3065730.png',
-  'lion-3065729.png',
-  'kangaroo-3065726.png',
-  'fox-3065706.png',
-  'giraffe-3065712.png',
-  'dolphin-3065698.png',
-  'deer-3065695.png',
-  'bear-3065687.png',
-].map(name => name === 'parrot-1864474.png' ? `/images/animals/mover/parrot-1864474.png` : `/images/animals/starter/${name}`);
+const starterPaths = [
+  '/images/animals/starter/starfish-3065740.png',
+  '/images/animals/starter/tiger-3065741.png',
+  '/images/animals/starter/snake-3065738.png',
+  '/images/animals/starter/seal-3065736.png',
+  '/images/animals/starter/octopus-3065730.png',
+  '/images/animals/starter/lion-3065729.png',
+  '/images/animals/starter/kangaroo-3065726.png',
+  '/images/animals/starter/fox-3065706.png',
+  '/images/animals/starter/giraffe-3065712.png',
+  '/images/animals/starter/dolphin-3065698.png',
+  '/images/animals/starter/deer-3065695.png',
+  '/images/animals/starter/bear-3065687.png',
+];
+
+const starter = starterPaths.map(path => ({
+  id: path.split('/').pop()?.replace(/\.[^/.]+$/, '') || '',
+  name: getDisplayName(path),
+  image: path
+}));
 
 // Mover (was normal)
-export const moverAnimals = [
+const moverPaths = [
   'snail-1449778.png',
   'hedgehog-1864601.png',
   'ostrich-1864590.png',
@@ -95,8 +89,14 @@ export const moverAnimals = [
   'bat-3065684.png',
 ].map(name => `/images/animals/mover/${name}`);
 
+const mover = moverPaths.map(path => ({
+  id: path.split('/').pop()?.replace(/\.[^/.]+$/, '') || '',
+  name: getDisplayName(path),
+  image: path
+}));
+
 // Flyer (was hard)
-export const flyerAnimals = [
+const flyerPaths = [
   'hippopotamus-1864568.png',
   'chameleon-1864575.png',
   'bison-1864564.png',
@@ -139,13 +139,15 @@ export const flyerAnimals = [
   'blobfish-3751344.png',
 ].map(name => `/images/animals/flyer/${name}`);
 
-// Cumulative sets for drag and drop quiz mode
-const moverSet = [...starterAnimals, ...moverAnimals];
-const flyerSet = [...starterAnimals, ...moverAnimals, ...flyerAnimals];
+const flyer = flyerPaths.map(path => ({
+  id: path.split('/').pop()?.replace(/\.[^/.]+$/, '') || '',
+  name: getDisplayName(path),
+  image: path
+}));
 
 export const animalsData = {
   name: 'Animals',
-  starter: starterAnimals,
-  mover: moverAnimals,
-  flyer: flyerAnimals,
+  starter: starter,
+  mover: mover,
+  flyer: flyer,
 };

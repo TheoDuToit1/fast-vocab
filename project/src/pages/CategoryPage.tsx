@@ -18,14 +18,7 @@ interface Category {
   itemCount: number;
 }
 
-const categories = [
-  categoriesData.animals,
-  categoriesData.colors,
-  categoriesData.alphabet,
-  categoriesData.numbers,
-  categoriesData.clothes,
-  categoriesData.food,
-].filter(category => category.id !== 'food' && category.id !== 'clothes');
+const categories = Object.values(categoriesData);
 
 const CategoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +31,47 @@ const CategoryPage: React.FC = () => {
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setShowModeModal(true);
+  };
+
+  // Helper function to extract URL from CSS url() syntax if present
+  const extractImageUrl = (imageUrl: string) => {
+    try {
+      if (!imageUrl) {
+        return getFallbackImage(selectedCategory || '');
+      }
+
+      if (imageUrl.startsWith('url(')) {
+        // Extract the URL from within the url("...") function
+        const extractedUrl = imageUrl.slice(5, -2);
+        return extractedUrl;
+      }
+      return imageUrl;
+    } catch (error) {
+      console.error("Error extracting image URL:", error);
+      return getFallbackImage(selectedCategory || '');
+    }
+  };
+
+  // Get fallback image for a category
+  const getFallbackImage = (categoryId: string) => {
+    switch (categoryId) {
+      case 'animals':
+        return '/images/animals/starter/tiger-3065741.png';
+      case 'clothes':
+        return '/images/clothes/starter/t-shirt.png';
+      case 'alphabet':
+        return '/images/alphabet/a-3479391.png';
+      case 'numbers':
+        return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="%2348bb78"/><text x="50%" y="50%" font-family="Arial" font-size="72" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">123</text></svg>';
+      case 'colors':
+        return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100" height="100" x="20" y="100" fill="%23ff0000"/><rect width="100" height="100" x="150" y="100" fill="%230000ff"/><rect width="100" height="100" x="280" y="100" fill="%2300ff00"/></svg>';
+      case 'food':
+        return '/images/foods/starter/pizza-1725716.png';
+      case 'classroom':
+        return '/images/classroom/starter/classroom.png';
+      default:
+        return '/images/animals/starter/tiger-3065741.png'; // Default fallback
+    }
   };
 
   const handleModeSelect = (settings: { mode: GameMode, speed?: string, difficulty?: string }) => {
@@ -119,6 +153,8 @@ const CategoryPage: React.FC = () => {
                 ? 'from-purple-300 via-violet-400 to-purple-500'
                 : category.id === 'food'
                 ? 'from-red-300 via-yellow-400 to-red-500'
+                : category.id === 'classroom'
+                ? 'from-blue-300 via-purple-400 to-blue-500'
                 : 'from-yellow-300 via-orange-400 to-yellow-500'}
                 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 animate-pulse pointer-events-none z-0 transition-all duration-500`}></div>
               {/* Card */}
@@ -129,6 +165,11 @@ const CategoryPage: React.FC = () => {
                     src={category.image}
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = getFallbackImage(category.id);
+                    }}
                   />
                   <div className={`absolute inset-0 bg-gradient-to-t ${category.id === 'animals'
                     ? 'from-green-400/30 to-transparent'
@@ -138,6 +179,8 @@ const CategoryPage: React.FC = () => {
                     ? 'from-purple-400/30 to-transparent'
                     : category.id === 'food'
                     ? 'from-red-400/30 to-transparent'
+                    : category.id === 'classroom'
+                    ? 'from-blue-400/30 to-transparent'
                     : 'from-yellow-400/30 to-transparent'} opacity-40`}></div>
                   {/* Animated Icon Badge */}
                   <div className="absolute top-4 right-4 w-14 h-14 bg-white/90 rounded-full flex items-center justify-center text-3xl shadow-xl group-hover:animate-bounce group-hover:scale-110 transition-all duration-300 border-2 border-white">
@@ -173,6 +216,8 @@ const CategoryPage: React.FC = () => {
                         ? 'from-purple-400 via-violet-500 to-purple-600 hover:from-violet-500 hover:to-purple-400'
                         : category.id === 'food'
                         ? 'from-red-400 via-yellow-500 to-red-600 hover:from-yellow-500 hover:to-red-400'
+                        : category.id === 'classroom'
+                        ? 'from-blue-400 via-purple-500 to-blue-600 hover:from-purple-500 hover:to-blue-400'
                         : 'from-yellow-400 via-orange-500 to-yellow-600 hover:from-orange-500 hover:to-yellow-400'}
                       hover:scale-105 hover:shadow-2xl animate-gradient-x bg-[length:200%_200%] bg-left hover:bg-right
                     `}
@@ -189,21 +234,7 @@ const CategoryPage: React.FC = () => {
         <div className="mt-16">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Coming Soon</h2>
           <div className="flex flex-wrap justify-center gap-6">
-            {[categoriesData.clothes, categoriesData.food].map((category) => (
-              <div key={category.id} className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 text-center border-2 border-dashed border-gray-300 flex flex-col items-center w-80">
-                <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 relative flex items-center justify-center bg-gray-100">
-                  <img src={category.image} alt={category.name} className="w-full h-full object-cover opacity-60" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl bg-white/80 rounded-full p-2"><span role='img' aria-label='locked'>🔒</span></span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-2xl">{category.icon}</span>
-                  <h3 className="text-xl font-bold text-gray-600">{category.name}</h3>
-                </div>
-                <p className="text-gray-500">This category is coming soon!</p>
-              </div>
-            ))}
+            
           </div>
         </div>
       </div>

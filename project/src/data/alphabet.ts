@@ -10,17 +10,22 @@ const alphabetFilenames = [
   'z-3479532.png'
 ];
 
-const alphabetItems = alphabetFilenames.map(filename => {
+// Create items for all letters
+const allAlphabetItems = alphabetFilenames.map(filename => {
   const letter = filename[0];
   return {
+    id: letter.toLowerCase(),
     name: letter.toUpperCase(),
     image: `/images/alphabet/${filename}`
   };
 }); 
 
+// Get only first 12 letters (A-L) for starter
+const starterAlphabetItems = allAlphabetItems.slice(0, 12);
+
 export const alphabetData = {
   name: 'Alphabet',
-  starter: alphabetItems,
-  mover: [],
-  flyer: [],
+  starter: starterAlphabetItems,
+  mover: allAlphabetItems.slice(12, 20),  // M-T
+  flyer: allAlphabetItems.slice(20),      // U-Z
 }; 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import Quiz from '../components/Quiz';
 import StudyMode from '../components/StudyMode';
 import NameInputModal from '../components/modals/NameInputModal';
@@ -10,6 +10,7 @@ import { GameMode, GameSettings } from '../types/game';
 const QuizPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { category } = useParams<{ category: string }>();
   const { gameState, updateGameState, resetGame } = useGame();
   const [showNameModal, setShowNameModal] = useState(false);
   const [showGameModeModal, setShowGameModeModal] = useState(true);
@@ -79,6 +80,7 @@ const QuizPage: React.FC = () => {
         <StudyMode 
           onBackToHome={handleBackToHome}
           onStartQuiz={handleStartQuiz}
+          categoryIdProp={category}
         />
       </div>
     );

@@ -15,14 +15,38 @@ import { MatchedPair, FloatingScore, Player, QuizItem } from '../types/game';
 import { alphabetData } from '../data/alphabet';
 import { clothesData } from '../data/clothes';
 import { foodData } from '../data/food';
-import { categories } from '../data/categories';
+import { categories, getCategory } from '../data/categories';
 import { useGame } from '../context/GameContext';
 import { useGameTimer } from '../hooks/useGameTimer';
 import { generateRandomNumbers, getNumberQuizItem, numbersData } from '../data/numbers';
+import { classroom } from '../data/classroom';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 interface QuizProps {
   onBackToHome: () => void;
 }
+
+// Helper function to shuffle an array
+const shuffleArray = (array: any[]) => {
+  let currentIndex = array.length,
+    randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+  return array;
+};
+
+// Helper function to generate a set for the quiz
+const generateQuizSet = (items: QuizItem[], count: number) => {
+  const shuffled = shuffleArray([...items]);
+  return shuffled.slice(0, count);
+};
 
 const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const { gameState, updateGameState, addPlayer, players, clearLeaderboard } = useGame();
@@ -55,17 +79,18 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   const [showSpeedBonus, setShowSpeedBonus] = useState(false);
 
   // --- Move these to the top ---
-  const validCategories = ['animals', 'colors', 'alphabet', 'numbers', 'clothes', 'food'];
+  const validCategories = ['animals', 'colors', 'alphabet', 'numbers', 'clothes', 'food', 'classroom'];
 
   const match = window.location.pathname.match(/quiz\/(\w+)/);
   const categoryId = match ? match[1] : '';
-  const categoryData = (categories as any)[categoryId] || { name: 'Quiz', icon: '' };
+  const category = getCategory(categoryId as any);
 
   const getSafeCategory = () => {
     if (validCategories.includes(categoryId)) return categoryId;
     if (window.location.pathname.includes('alphabet')) return 'alphabet';
     if (window.location.pathname.includes('colors')) return 'colors';
     if (window.location.pathname.includes('animals')) return 'animals';
+    if (window.location.pathname.includes('classroom')) return 'classroom';
     return 'unknown';
   };
 
@@ -80,7 +105,16 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
   useEffect(() => {
     // --- Rebuild: treat alphabet exactly like animals ---
     let items: any[] = [];
-    if (categoryId === 'alphabet') {
+    const difficulty = (gameState as any).difficulty || 'starter';
+    
+    if (categoryId === 'classroom') {
+      items = classroom.items.map((item: { name: string; image: string }) => ({
+        id: item.name,
+        name: item.name,
+        image: item.image,
+        category: 'classroom',
+      }));
+    } else if (categoryId === 'alphabet') {
       // Use the same logic as animals for building pool, sets, and shuffling
       const normalizeAlphabet = (item: { name: string, image: string }, i: number) => ({
         id: item.name.toLowerCase() + '-' + i,
@@ -91,20 +125,34 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       });
       items = alphabetData.starter.map(normalizeAlphabet);
     } else if (categoryId === 'animals') {
-      const difficulty = (gameState as any).difficulty || 'starter';
-      const normalizeAnimal = (imgPath: string) => {
+      const normalizeAnimal = (item: any) => {
+        // If the item is already properly structured
+        if (item && item.name && item.image) {
+          return {
+            id: item.id || item.name.toLowerCase().replace(/\s+/g, '-'),
+            name: item.name,
+            image: item.image,
+            category: 'animals',
+            hex: undefined,
+          };
+        }
+        
+        // Otherwise, assume it's an image path
+        const imgPath = typeof item === 'string' ? item : item.image;
         const fileName = imgPath.split('/').pop() || '';
         const base = fileName.replace(/\.[^/.]+$/, '');
-        let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        let displayName = base.replace(/[-_][0-9]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        
         if (imgPath.includes('parrot-1864474.png')) displayName = 'Bird';
         else if (/^stingray/i.test(base)) displayName = 'Stingray';
         else if (/^seahorse/i.test(base)) displayName = 'Seahorse';
         else if (/^panda-bear/i.test(base)) displayName = 'Panda';
+        
         return {
           id: base,
           name: displayName,
           image: imgPath,
-          category: '',
+          category: 'animals',
           hex: undefined,
         };
       };
@@ -120,7 +168,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(normalizeAnimal); // fallback
       }
     } else if (categoryId === 'colors') {
-      const difficulty = (gameState as any).difficulty || 'starter';
       let colorPool = [];
       if (difficulty === 'starter') {
         colorPool = [...colorsData.starter];
@@ -129,7 +176,6 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
       } else {
         colorPool = [...colorsData.starter, ...colorsData.mover, ...colorsData.flyer];
       }
-      console.log('Initial colorPool:', colorPool);
       
       // Ensure we have enough colors
       if (colorPool.length === 0) {
@@ -148,30 +194,23 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         hex: c.hex, 
         category: '' 
       }));
-      console.log('Processed colorPool:', colorPool);
       
       items = colorPool;
     } else if (categoryId === 'numbers') {
-      // Use the same number generation as Study Mode for the current difficulty
-      let digits = 2;
-      const difficulty = (gameState as any).difficulty || 'starter';
-      if (difficulty === 'flyer') digits = 4;
-      else if (difficulty === 'mover') digits = 3;
-      else digits = 2;
-      const nums = generateRandomNumbers(40, digits);
-      items = nums.map((n, i) => {
-        const quizItem = getNumberQuizItem(n);
-        return {
-          id: quizItem.id + '-' + i,
-          name: quizItem.word, // word for drop zone
-          display: quizItem.value, // numeral for draggable
-          value: quizItem.value,
-          hex: '#6366f1',
-        };
-      });
+      // Use the same fixed set as Study Mode instead of random generation
+      const allNumberItems = [...numbersData.starter];
+      
+      items = allNumberItems.map((item) => ({
+        id: item.id,
+        name: item.name, // word for drop zone
+        display: parseInt(item.id), // numeral for draggable
+        value: parseInt(item.id),
+        image: item.image,
+        hex: '#6366f1',
+      }));
+
       items = items.filter(item => item.id && item.name);
     } else if (categoryId === 'clothes') {
-      const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeClothes = (item: { name: string, image: string }) => ({
         ...item,
         id: item.name.toLowerCase().replace(/\s+/g, '-'),
@@ -191,11 +230,10 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
         items = [...clothesData.starter, ...clothesData.mover, ...clothesData.flyer].map(normalizeClothes);
       }
     } else if (categoryId === 'food') {
-      const difficulty = (gameState as any).difficulty || 'starter';
       const normalizeFood = (item: { name: string, image: string }) => ({
         ...item,
         id: item.name.toLowerCase().replace(/\s+/g, '-'),
-          category: '',
+        category: '',
         hex: undefined,
       });
 
@@ -213,6 +251,11 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
     } else {
       // fallback
       items = [...animalsData.starter, ...animalsData.mover, ...animalsData.flyer].map(imgPath => ({ id: imgPath, name: imgPath, image: imgPath, category: '', hex: undefined }));
+    }
+    
+    // Ensure we limit to 12 items for starter mode
+    if (difficulty === 'starter' && items.length > 12) {
+      items = items.slice(0, 12);
     }
     
     // For all categories, split into sets of 3
@@ -732,8 +775,12 @@ const Quiz: React.FC<QuizProps> = ({ onBackToHome }) => {
             <Home className="w-6 h-6 text-blue-600" />
           </button>
           <span className="text-4xl font-bold text-purple-600 flex items-center gap-2">
-            <span className="text-3xl">{categoryData.icon}</span>
-            {categoryData.name}
+            <div className="top-3 left-3 absolute flex flex-col items-start z-30">
+              <div className="flex items-center bg-white rounded-lg px-4 py-2 shadow-lg font-bold text-xl gap-2 border-2 hover:scale-105 transition-transform">
+                <span className="text-3xl">{categories.find(cat => cat.id === categoryId)?.icon || '🎮'}</span>
+                {categories.find(cat => cat.id === categoryId)?.name || 'Quiz'}
+              </div>
+            </div>
           </span>
         </div>
 
