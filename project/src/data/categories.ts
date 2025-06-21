@@ -87,7 +87,7 @@ export const categories: CategoryInfo[] = [
     description: 'Learn the names of food!',
     icon: '🍕',
     color: 'bg-pink-200',
-    image: '/images/foods/starter/pizza-1725716.png',
+    image: '/images/foods/starter/ice-cream.png',
     itemCount:
       foodData.starter.length + foodData.mover.length + foodData.flyer.length,
   },

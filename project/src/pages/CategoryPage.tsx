@@ -66,7 +66,7 @@ const CategoryPage: React.FC = () => {
       case 'colors':
         return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100" height="100" x="20" y="100" fill="%23ff0000"/><rect width="100" height="100" x="150" y="100" fill="%230000ff"/><rect width="100" height="100" x="280" y="100" fill="%2300ff00"/></svg>';
       case 'food':
-        return '/images/foods/starter/pizza-1725716.png';
+        return '/images/foods/starter/ice-cream.png';
       case 'classroom':
         return '/images/classroom/starter/classroom.png';
       default:
